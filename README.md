@@ -2,7 +2,7 @@
 
 <p align="center">
   VapourSynth restoration filters on a node in DaVinci Resolve.<br>
-  Build the chain visually, check it against scopes, render it in Resolve.
+  Build your filter chain visually, with a built-in assistant to guide you.
 </p>
 
 <h3 align="center">
@@ -14,11 +14,11 @@
 </p>
 
 <p align="center">
+  <a href="#skippy-your-restoration-assistant">Meet Skippy</a>
+  &nbsp;·&nbsp;
   <a href="#install">Install</a>
   &nbsp;·&nbsp;
   <a href="#use">Use</a>
-  &nbsp;·&nbsp;
-  <a href="#skippy-the-scripting-assistant">Skippy</a>
   &nbsp;·&nbsp;
   <a href="#build-from-source">Build from source</a>
 </p>
@@ -33,14 +33,63 @@
 
 [VapourSynth](https://www.vapoursynth.com) is a video processing framework with some of the best restoration filters there are: QTGMC deinterlacing, BM3D denoising and many more. Normally, using it means writing Python scripts.
 
-VapourSynth for Resolve puts those filters on a node in Resolve's Color page. It has two parts:
+VapourSynth for Resolve puts those filters on a node in Resolve's Color page. It is made for beginners as much as for experienced restoration artists. It has three parts:
 
 - **The OFX plugin** runs your filter chain inside Resolve.
 - **The companion app** is where you build the chain. Pick filters from a library, adjust them, preview the result, then send it back to the node.
+- **Skippy** is the assistant built into the app. Ask it what your footage needs, what a filter does, or to write a custom step for you.
 
 There is nothing else to set up. Python, VapourSynth and a curated set of filter plugins are built in.
 
-For anything the library does not cover, you can add your own script step, and [Skippy](#skippy-the-scripting-assistant), the built-in assistant, helps you write it.
+## Skippy, your restoration assistant
+
+<p align="center">
+  <img src="docs/images/skippy-panel.png" width="376" alt="The Skippy chat panel in the companion app, showing its greeting">
+</p>
+
+You do not need to know VapourSynth to use this. Skippy is a chat assistant that sits beside your chain in every tab. It knows video restoration, and it answers in plain language.
+
+Skippy can see your clip's details, such as its format, frame rate and whether it is interlaced, along with the steps already in your chain, so its advice fits your footage. It cannot see the picture itself, so tell it what you see.
+
+**If you are new to restoration,** describe the problem and ask what to do:
+
+- "Moving edges look like the teeth of a comb. What is that, and how do I fix it?"
+- "Which denoiser should I start with for a grainy 16mm scan?"
+- "What does the QTGMC preset actually change?"
+
+**If you know your way around,** hand it the custom work:
+
+- "Write a step that hides the head-switching noise on this VHS capture."
+- "This script step fails. Here is the error."
+- "Change this denoise step so it keeps more of the grain."
+
+### An example
+
+You type:
+
+> This VHS capture has a band of flickering noise along the bottom edge. Can you hide it?
+
+Skippy explains what the problem is and adds a step like this to your chain, with comments on each line:
+
+```python
+# VHS decks switch heads near the bottom of the picture, which leaves a band
+# of torn, flickering lines. Cut those 8 lines off...
+clip = core.std.Crop(clip, bottom=8)
+
+# ...then add 8 black lines back, so the frame keeps its size and the rest
+# of the chain sees the same resolution. 4096 is video black at 16 bits.
+clip = core.std.AddBorders(clip, bottom=8, color=[4096, 32768, 32768])
+```
+
+The step arrives unapproved, so nothing runs until you have read it. Click **Approve**, then check the result in **Preview**. If it is not right, say so ("make it 12 lines") and Skippy updates the same step.
+
+### Setting it up
+
+Skippy needs an AI model to talk to. Click the gear in the Skippy panel and add your own API key (Anthropic, OpenAI, Google Gemini, OpenRouter or xAI), or point it at a local model running in LM Studio or Ollama. Cloud providers charge for usage under your own account. Keys are stored in the macOS Keychain.
+
+With Anthropic models Skippy edits the chain directly. With the other providers it answers with code that you paste into a Script step yourself. See [provider settings](docs/llm-providers.md).
+
+Skippy is optional. Everything else works without it.
 
 ## A quick tour
 
@@ -85,7 +134,7 @@ To update, delete `/Library/OFX/Plugins/VapourSynth.ofx.bundle` and repeat step 
 
 1. On the **Color** page, open **OpenFX**, find **VapourSynth** and drag it onto a node.
 2. In the node's settings, click **Configure…** The companion app opens on that clip.
-3. In **Chain**, add filters from the library and adjust them.
+3. In **Chain**, add filters from the library and adjust them. Not sure where to start? Ask Skippy.
 4. In **Preview**, switch between **Source** and **Chain** and read the scopes.
 5. Click **Save and close**. The chain is applied to the node and Resolve renders it.
 
@@ -98,30 +147,6 @@ A few things worth knowing:
 - **Recipes** saves a chain so you can reuse it on other clips.
 - **Source file.** Restoration filters work best when they read the original media file. If the app does not pick it up by itself, click **Identify source…** or drop the file in from Finder.
 - **Script steps run real Python on your Mac.** They only run once you approve them, so read a script before you approve it, including anything a recipe or Skippy proposes.
-
-## Skippy, the scripting assistant
-
-Not every fix is in the filter library. A **Script** step runs your own VapourSynth code, and Skippy is there to help you write it. Describe the problem in plain words and Skippy drafts the step, with comments that explain each line.
-
-For example, you type:
-
-> This VHS capture has a band of flickering noise along the bottom edge. Can you hide it?
-
-Skippy adds a Script step like this to your chain:
-
-```python
-# VHS decks switch heads near the bottom of the picture, which leaves a band
-# of torn, flickering lines. Cut those 8 lines off...
-clip = core.std.Crop(clip, bottom=8)
-
-# ...then add 8 black lines back, so the frame keeps its size and the rest
-# of the chain sees the same resolution. 4096 is video black at 16 bits.
-clip = core.std.AddBorders(clip, bottom=8, color=[4096, 32768, 32768])
-```
-
-The step arrives unapproved. Read it, click **Approve**, and check the result in **Preview**. If it is not right, say what to change ("make it 12 lines") and Skippy updates the same step. It can also explain what a filter or setting does, and help work out why a script fails.
-
-Skippy is optional, and everything else works without it. It needs a model to talk to: your own API key (Anthropic, OpenAI, Google Gemini, OpenRouter or xAI) or a local model through LM Studio or Ollama. Keys are stored in the macOS Keychain. With Anthropic models Skippy edits the chain directly. With the other providers it answers with code that you paste into a Script step yourself. See [provider settings](docs/llm-providers.md).
 
 ## Build from source
 
