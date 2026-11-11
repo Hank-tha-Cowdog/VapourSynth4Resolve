@@ -26,10 +26,8 @@ Sources build with CMake ≥ 3.25 + a project-local VapourSynth prefix
 ## Download and install (alpha)
 
 Signed alpha builds are attached to the releases page (prerelease channel).
-The app is **Developer ID signed; notarization is pending** — until it lands,
-macOS Gatekeeper blocks first launch on other machines, so open the app once
-via right-click → Open (or System Settings → Privacy & Security → Open
-Anyway). The app is self-contained (embedded Python + VapourSynth runtime +
+The app is **Developer ID signed, notarized and stapled** — it installs and
+launches with no Gatekeeper prompts on any Mac. The app is self-contained (embedded Python + VapourSynth runtime +
 curated plugins), so no Homebrew or system Python is required; installing the
 OFX bundle for Resolve itself is documented in `docs/packaging.md`.
 
@@ -76,8 +74,8 @@ keyed-LAN posture, token-log posture (see above).
   obligations that are tracked, not yet fully resolved, in `docs/notices-index.md`;
   alpha DMG builds ship as prerelease assets with notices included, and
   corrections are welcome.
-- **Notarization** of the DMG requires a notarytool credential profile (owner
-  step); until then Gatekeeper blocks the app on other machines.
+- **Notarization** — complete for this alpha: signed, notarized and stapled
+  (verify: `spctl -a -vv` reports "Notarized Developer ID").
 - **Clean-Mac qualification** on independent hardware and **live-Resolve**
   export/Render-in-Place pixel checks remain open gates.
 - The companion's fork lineage question (`docs/SBOM.md` Q1) is an open owner
