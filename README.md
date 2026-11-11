@@ -1,174 +1,165 @@
-# VapourSynth for Resolve v2
+<h1 align="center">VapourSynth for Resolve</h1>
 
-VapourSynth for Resolve brings a Python filter chain into a DaVinci Resolve OFX node.
-An Electron companion provides a chain editor, Script steps, preview controls and the
-Skippy chatbot for help writing VapourSynth scripts.
+<p align="center">
+  VapourSynth restoration filters on a node in DaVinci Resolve.<br>
+  Build the chain visually, check it against scopes, render it in Resolve.
+</p>
 
-**Development alpha.** Current work targets macOS 26+ on Apple Silicon (arm64).
-The project now ships a self-contained OFX plugin bundle and a signed companion app
-as an **alpha DMG** via the releases page; notarization, clean-Mac and live-Resolve
-qualification of the current candidate remain open. Windows and Linux ports are
-planned; there is no runtime qualification on those platforms.
+<h3 align="center">
+  <a href="https://github.com/Hank-tha-Cowdog/VapourSynth4Resolve/releases/download/v2.0.0-alpha.0/VapourSynth.Companion-2.0.0-alpha.0-arm64.dmg">Download for macOS</a> <sup>alpha</sup>
+</h3>
 
-The tool is intended to remain free and open source. Optional cloud providers have
-their own accounts, terms and billing; an API key is unnecessary for manual chain editing.
+<p align="center">
+  <sub>Apple Silicon &nbsp;·&nbsp; macOS 26 or later &nbsp;·&nbsp; DaVinci Resolve 21 &nbsp;·&nbsp; free and open source</sub>
+</p>
 
-## Current status
+<p align="center">
+  <a href="#install">Install</a>
+  &nbsp;·&nbsp;
+  <a href="#use">Use</a>
+  &nbsp;·&nbsp;
+  <a href="#skippy-the-scripting-assistant">Skippy</a>
+  &nbsp;·&nbsp;
+  <a href="#build-from-source">Build from source</a>
+</p>
 
-The October 26+ workflow: **Configure…** → edit in the companion → **Save and
-close**. When the dev-launched companion exits, the host observes the process
-exit and applies the saved revision on the main thread through the same path as
-the **Apply companion changes** button, which remains as the fallback (shipped
-app launches have no observable PID and stay manual). Automatic editor sync
-keeps edits in memory; it does not publish a pending file. The clip-mode OFX
-source now degrades out-of-window temporal fetches to the nearest in-window
-frame instead of failing the whole chain, and QTGMC declares a ±10 frame
-window to cover its TR0 + vector + SourceMatch reach.
-The October 26 local verification rebuilt this exact source end to end: native
-Release/arm64 compile (including the opt-in companion-exchange test, which passed
-under its required fresh `VSRES_NATIVE_TEST_ROOT` fixture), the 43-case macOS OFX
-transaction suite, all 353 companion node test cases (277 across the electron
-suites plus 76 across the four registry suites), the TypeScript check, the Vite renderer build, an OFX
-bundle load smoke test (`OfxGetPlugin` resolves) and an unsigned local arm64
-companion DMG. The sample renderer now refuses `raw_script` before any effect;
-its execution tests cover the two declarative modes with explicit refusal coverage.
-Live qualification, October 26 (Resolve 21.1.1, Apple Silicon): the installed
-bundle renders a QTGMC chain in source-mode at 1080p (~0.7 s/frame on preset
-Slower), auto-identify binds the playhead clip's media path on Configure, the
-companion's saved revision auto-applies on exit, the clip-mode OFX source
-retargets out-of-window temporal fetches instead of erroring, and the
-"Synthesizing clip…" courtesy overlay shows/hides around slow first renders.
-Remaining limits: the overlay/AppKit work is main-queue-confined but not
-qualified under render-cancel races; per-dimension VS cache thrash across
-viewer/thumbnail sizes is inherent and unoptimized; clip-mode edge quality
-(repeated frames at the window edge) is a degradation, not an error — prefer
-identified sources for restoration. Native preview is unavailable through this
-workflow. This repository is the public source release; signed alpha DMG builds
-ship via the releases page.
+![The companion app: a processed frame beside RGB parade scopes, with the filter library on the left](docs/images/preview-scopes.png)
 
-The current candidate rebuilt from a clean tree ran the full companion suite (797
-tests across 66 files, green), the native composer and private-IO suites, TypeScript
-and the Vite renderer build; the portable OFX bundle staged for the alpha DMG passes
-its bundled-path policy audit. These checks establish local build/unit behavior.
-They do not establish live Resolve rendering, real Keychain/provider integration or
-installation on another Mac — a clean-Mac qualification run and live-Resolve pixel
-checks remain open.
+<p align="center">
+  <sub>The Preview tab: the processed frame beside scopes measured from the same signal.</sub>
+</p>
 
-## Implemented development features
+## What it is
 
-- A chain editor with stage ordering, drag reorder, Manual Order, enabled/draft state
-  and a CodeMirror Python editor for Script steps.
-- A typed QTGMC panel; other filters depend on the actual installed VapourSynth plugins
-  and helpers. The static plugin catalog is a guide, not live availability proof.
-- An OFX/companion configuration bridge, preview and log controls, and stored color
-  settings. Color controls are not proof of complete OCIO transforms or color fidelity.
-- Provider selection and Settings for cloud keys and local endpoints. Anthropic has
-  the implemented tool-edit loop; other provider adapters are text-only. Model IDs
-  and provider compatibility need verification against actual accounts/endpoints.
-- A macOS native implementation using OpenFX, VapourSynth R75 and Apple frameworks.
+[VapourSynth](https://www.vapoursynth.com) is a video processing framework with some of the best restoration filters there are: QTGMC deinterlacing, BM3D denoising and many more. Normally, using it means writing Python scripts.
 
-Script steps execute Python when the chain is evaluated. Review scripts and proposed
-edits before approving them, and use isolated test projects and media during alpha testing.
+VapourSynth for Resolve puts those filters on a node in Resolve's Color page. It has two parts:
 
-## Settings and credentials
+- **The OFX plugin** runs your filter chain inside Resolve.
+- **The companion app** is where you build the chain. Pick filters from a library, adjust them, preview the result, then send it back to the node.
 
-Open **Configure…**, then the gear in Skippy chat header to open provider settings.
-Enter a cloud provider key in its password field and select **Save**. The macOS backend
-uses Keychain through keytar. Status shows a full mask; **Forget key** removes the entry.
+There is nothing else to set up. Python, VapourSynth and a curated set of filter plugins are built in.
 
-The application does not import keys from legacy plaintext secret files or environment
-variables. Keys previously configured that way must be entered explicitly in Settings.
-Local LM Studio/Ollama backends use endpoint settings and do not require a key.
-Endpoint settings accept HTTP(S) base URLs without userinfo, query strings or fragments.
+For anything the library does not cover, you can add your own script step, and [Skippy](#skippy-the-scripting-assistant), the built-in assistant, helps you write it.
 
-Never commit keys or put them in scripts, issue reports, screenshots or command arguments.
-See [provider configuration](docs/llm-providers.md).
+## A quick tour
 
-## Developer build
+### Chain
 
-This is a development workflow; the build scripts require tools and make changes
-to a development environment.
+Add filters from the library and set them with ordinary controls. Steps are arranged in a sensible restoration order for you, and every step shows the script it produces.
 
-The selected release target is macOS 26.0 or later on Apple Silicon (arm64), pending
-qualification. See [selected macOS policy](docs/macos-support-policy.md). Development
-requires CMake 3.24+, a C++20 toolchain, VapourSynth/VSScript libraries, Python and
-Node/npm. Lower component minima do not change the product requirement; no supported
-runtime certification follows from a deployment target or metadata declaration.
-The tested local tool versions are those recorded across this repository's build scripts.
+![The Chain tab with a levels step and a QTGMC deinterlace step](docs/images/filter-chain.png)
 
-Read [macOS build details](docs/building-macos.md) and review the scripts before preparing
-VapourSynth and companion dependencies. With those dependencies already available:
+### Pipeline
 
-```sh
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_OSX_DEPLOYMENT_TARGET=26.0 -DCMAKE_OSX_ARCHITECTURES=arm64 \
-  -DVSRES_VS_PREFIX="$PWD/vendor/vapoursynth/active" -DVSRES_BUILD_TESTS=ON
-cmake --build build --parallel 2
-ctest --test-dir build --output-on-failure --no-tests=error
+The whole path on one page: source, input conversion, each filter in order, and the output back to Resolve, with color space and gamma labels at every stage.
+
+![The Pipeline tab showing the signal path from source file to Resolve output](docs/images/pipeline-flow-map.png)
+
+### Script
+
+The exact VapourSynth script the node runs, section by section. Nothing is hidden.
+
+![The Script tab showing the composed VapourSynth script](docs/images/script-redacted.png)
+
+## Install
+
+You need an Apple Silicon Mac on macOS 26 or later, and DaVinci Resolve 21.
+
+1. **Download** [VapourSynth for Resolve for macOS](https://github.com/Hank-tha-Cowdog/VapourSynth4Resolve/releases/download/v2.0.0-alpha.0/VapourSynth.Companion-2.0.0-alpha.0-arm64.dmg). It is a `.dmg` file and lands in your Downloads folder.
+2. **Open the `.dmg`** and drag VapourSynth Companion onto the Applications folder.
+3. **Open the app once** from Applications. macOS asks you to confirm the first time; click **Open**.
+4. **Add the plugin to Resolve.** Quit Resolve, open the Terminal app, paste this and press Return. It asks for your Mac password, and nothing shows while you type it.
+
+   ```sh
+   sudo mkdir -p /Library/OFX/Plugins && sudo cp -R \
+     "/Applications/VapourSynth Companion.app/Contents/Resources/OFX/VapourSynth.ofx.bundle" \
+     /Library/OFX/Plugins/
+   ```
+
+5. **Start Resolve.** VapourSynth is now in the OpenFX library on the Color page.
+
+To update, delete `/Library/OFX/Plugins/VapourSynth.ofx.bundle` and repeat step 4 with the new version. Older versions are on the [releases page](https://github.com/Hank-tha-Cowdog/VapourSynth4Resolve/releases).
+
+## Use
+
+1. On the **Color** page, open **OpenFX**, find **VapourSynth** and drag it onto a node.
+2. In the node's settings, click **Configure…** The companion app opens on that clip.
+3. In **Chain**, add filters from the library and adjust them.
+4. In **Preview**, switch between **Source** and **Chain** and read the scopes.
+5. Click **Save and close**. The chain is applied to the node and Resolve renders it.
+
+To change the chain later, click **Configure…** again.
+
+A few things worth knowing:
+
+- **Mix** on the node blends the filtered result with the original.
+- **Manual Order** lets you arrange the steps yourself instead of using the automatic order.
+- **Recipes** saves a chain so you can reuse it on other clips.
+- **Source file.** Restoration filters work best when they read the original media file. If the app does not pick it up by itself, click **Identify source…** or drop the file in from Finder.
+- **Script steps run real Python on your Mac.** They only run once you approve them, so read a script before you approve it, including anything a recipe or Skippy proposes.
+
+## Skippy, the scripting assistant
+
+Not every fix is in the filter library. A **Script** step runs your own VapourSynth code, and Skippy is there to help you write it. Describe the problem in plain words and Skippy drafts the step, with comments that explain each line.
+
+For example, you type:
+
+> This VHS capture has a band of flickering noise along the bottom edge. Can you hide it?
+
+Skippy adds a Script step like this to your chain:
+
+```python
+# VHS decks switch heads near the bottom of the picture, which leaves a band
+# of torn, flickering lines. Cut those 8 lines off...
+clip = core.std.Crop(clip, bottom=8)
+
+# ...then add 8 black lines back, so the frame keeps its size and the rest
+# of the chain sees the same resolution. 4096 is video black at 16 bits.
+clip = core.std.AddBorders(clip, bottom=8, color=[4096, 32768, 32768])
 ```
 
-Companion source checks, from `companion-app/` with existing dependencies:
+The step arrives unapproved. Read it, click **Approve**, and check the result in **Preview**. If it is not right, say what to change ("make it 12 lines") and Skippy updates the same step. It can also explain what a filter or setting does, and help work out why a script fails.
+
+Skippy is optional, and everything else works without it. It needs a model to talk to: your own API key (Anthropic, OpenAI, Google Gemini, OpenRouter or xAI) or a local model through LM Studio or Ollama. Keys are stored in the macOS Keychain. With Anthropic models Skippy edits the chain directly. With the other providers it answers with code that you paste into a Script step yourself. See [provider settings](docs/llm-providers.md).
+
+## Build from source
+
+You need Xcode, Homebrew (for `zimg` and Python 3.12 or later), CMake 3.24 or later, and Node 24.
 
 ```sh
-npm run test:credentials
-npx tsc --noEmit --incremental false
-npm run build
+scripts/build-vapoursynth.sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DVSRES_VS_PREFIX="$PWD/vendor/vapoursynth/active"
+cmake --build build
+cd companion-app && npm ci && npm run build
 ```
 
-These example commands do not install the plugin into Resolve. The alpha packaging
-pipeline (`cmake --build <build> --target portable_bundle` plus the companion's
-`npm run dist`) stages the self-contained OFX bundle, the embedded Python/VapourSynth
-runtime, curated plugins and per-component notices into the DMG. [Packaging notes](docs/packaging.md)
-document the pipeline and its known limits; clean-Mac qualification of the shipped
-artifact is still open.
+This builds the plugin and the app for development. Making the self-contained bundle and the DMG is covered in [packaging](docs/packaging.md). See also [building on macOS](docs/building-macos.md) and [architecture](docs/architecture.md).
 
-## Project layout
+## Status
 
-| Path | Purpose |
-| --- | --- |
-| `common/` | C++ chain schema/composer, filters, color/marshal/config/IPC/logging |
-| `platform/macos/` | OFX entry, host integration, native frame I/O, launcher and preview |
-| `platform/windows/` | Legacy Windows v1 source; not a tested v2 port |
-| `companion-app/` | Electron main/preload, provider adapters and React UI |
-| `tests/` | Current standalone C++ composer test runner |
-| `scripts/` | Development build/setup and restoration utilities |
-| `docs/` | Architecture, developer notes, provider configuration and OpenFX SDK |
-| `vendor/` | Ignored local development dependencies; not a redistributable release payload |
+This is an early alpha.
 
-The portable core should stay separate from platform adapters for paths/processes,
-plugin discovery, Resolve integration, secure credentials and installers. Windows and
-Linux require their own dependency/license inventories and actual runtime tests.
+- It runs on macOS with Apple Silicon only. Windows and Linux are planned.
+- It has not been widely tested on other people's Macs yet, so expect rough edges.
+- Try it on test projects and copies of your media first.
 
-See [architecture](docs/architecture.md) for the current design. The development Electron
-entry point also starts a loopback MCP listener; hardened external-agent/MCP exposure is
-a future-version proposal, not a v2 release acceptance requirement or tested security claim.
-
-## Contributing and reporting problems
-
-Include the source revision, OS/architecture, Resolve version, exact component versions,
-steps to reproduce and relevant redacted diagnostics. Label whether a result came from
-unit tests, a mock, a local native run or a clean-machine installation. Preserve original
-failures and use small synthetic fixtures where possible. Do not include private footage,
-project exports or credentials in public reports. Do not disclose a suspected secret publicly.
+Known limitations are listed in the [release notes](docs/release-notes-2.0.0-alpha.0.md). Found a bug? [Open an issue](https://github.com/Hank-tha-Cowdog/VapourSynth4Resolve/issues) with your macOS and Resolve versions and the steps to reproduce it. Please leave out private footage and API keys.
 
 ## License
 
-The existing root [LICENSE](LICENSE) contains GPLv3 for the native project. The companion
-package metadata and existing project declaration specify MIT. Each third-party component
-retains its own license and notices; no license was changed by the October documentation update.
-
-VapourSynth is LGPL-2.1-or-later. Linking LGPL software does not itself require every caller
-to use GPL. Copied-code provenance, the GPL/proprietary Resolve host boundary and exact
-per-component distribution obligations are tracked in the notices
-([notice index](docs/notices-index.md), [SBOM](docs/SBOM.md)). The entire tree must
-not be relabeled with a permissive license to bypass those terms.
+The OFX plugin is [GPLv3](LICENSE). The companion app is [MIT](companion-app/LICENSE). Bundled third-party components keep their own licenses; see the [notices index](docs/notices-index.md) and [SBOM](docs/SBOM.md).
 
 ## Credits
 
-- Original Windows OFX work and VapourSynth: Fredrik Mellbin and contributors.
-- v2 development and companion: Hank-tha-Cowdog.
-- Companion shell: VapourSage; Resolve bridge source credits First Cut v3.
-- OpenFX: Academy Software Foundation and contributors.
-- BM3DMETAL: Sunflower-Dolls.
-- vs-mlrt: AmusementClub.
-- Filter, helper and runtime authors retain their own credits and notices.
+This project began as a tool for the restoration of Bruce Lee's *Game of Death*. [Read the story](https://zacharymakes.com/projects/vapoursynth-davinci-plugin).
+
+Thanks to **Xappio Inc.** for their contributions and support in this release.
+
+- VapourSynth and the original Windows OFX plugin: Fredrik Mellbin and contributors
+- v2 and the companion app: Hank-tha-Cowdog
+- Companion shell: VapourSage
+- OpenFX: Academy Software Foundation and contributors
+- BM3DMETAL: Sunflower-Dolls
+- vs-mlrt: AmusementClub
+- Every filter, helper and runtime author keeps their own credits and notices
