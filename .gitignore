@@ -1,0 +1,63 @@
+# Build directories
+build/
+build-*/
+out/
+cmake-build-*/
+
+# Vendored VapourSynth (built via scripts/build-vapoursynth.sh)
+vendor/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# IDE
+.vscode/
+.idea/
+.cache/
+*.xcodeproj/
+*.swp
+.DS_Store
+
+# macOS bundles in working tree
+*.ofx.bundle/
+# but the vendored OpenFX SDK ships its example Makefiles
+!docs/ofx-sdk/**/Makefile
+!docs/ofx-sdk/**/*.ofx.bundle/
+
+# Companion app
+companion-app/node_modules/
+companion-app/dist/
+companion-app/build/
+
+# Test artifacts
+tests/output/
+tests/tmp/
+
+# Secrets — never check in. Real keys live in
+# macOS Keychain, entered through Provider Settings.
+# These patterns are defense-in-depth in case someone drops one inside by mistake.
+secrets.json
+*.secrets.json
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.keychain-db
+credentials.json
+credentials.*.json
+.netrc
+.pypirc
+id_rsa
+id_ed25519
+
+# Python bytecode from development scripts
+__pycache__/
+tests/fixtures/*.lwi
+tests/fixtures/*.y4m
+tests/fixtures/*.lwi

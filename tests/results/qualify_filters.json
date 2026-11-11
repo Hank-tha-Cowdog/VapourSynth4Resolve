@@ -1,0 +1,605 @@
+{
+ "ok": true,
+ "results": {
+  "asharp": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "motion",
+   "before": {
+    "d1": 0.05,
+    "d2": 0.09,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "after": {
+    "d1": 0.32,
+    "d2": 0.55,
+    "comb_ratio": 0.59,
+    "lap": 641
+   },
+   "temporal_before": 16.06,
+   "temporal_after": 20.67,
+   "dims": "640x480",
+   "format": "YUV422P10",
+   "frames": 24,
+   "secs": 0.3
+  },
+  "bm3dmetal": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "noise",
+   "before": {
+    "d1": 37.04,
+    "d2": 37.07,
+    "comb_ratio": 1.0,
+    "lap": 242633
+   },
+   "after": {
+    "d1": 36.31,
+    "d2": 36.38,
+    "comb_ratio": 1.0,
+    "lap": 238099
+   },
+   "temporal_before": 44.74,
+   "temporal_after": 84.79,
+   "dims": "640x480",
+   "format": "YUV420P16",
+   "frames": 24,
+   "secs": 0.4
+  },
+  "cas": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "motion",
+   "before": {
+    "d1": 0.05,
+    "d2": 0.09,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "after": {
+    "d1": 0.09,
+    "d2": 0.17,
+    "comb_ratio": 0.52,
+    "lap": 46
+   },
+   "temporal_before": 16.06,
+   "temporal_after": 16.11,
+   "dims": "640x480",
+   "format": "YUV422P10",
+   "frames": 24,
+   "secs": 0.3
+  },
+  "deblock": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "noise",
+   "before": {
+    "d1": 37.04,
+    "d2": 37.07,
+    "comb_ratio": 1.0,
+    "lap": 242633
+   },
+   "after": {
+    "d1": 37.03,
+    "d2": 37.06,
+    "comb_ratio": 1.0,
+    "lap": 242589
+   },
+   "temporal_before": 44.74,
+   "temporal_after": 44.74,
+   "dims": "640x480",
+   "format": "YUV422P10",
+   "frames": 24,
+   "secs": 0.3
+  },
+  "descale_debicubic": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "motion",
+   "before": {
+    "d1": 0.05,
+    "d2": 0.09,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "after": {
+    "d1": 0.6,
+    "d2": 1.03,
+    "comb_ratio": 0.58,
+    "lap": 621
+   },
+   "temporal_before": 16.06,
+   "temporal_after": 8.12,
+   "dims": "320x240",
+   "format": "YUV444PS",
+   "frames": 24,
+   "secs": 0.2
+  },
+  "dfttest": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "noise",
+   "before": {
+    "d1": 37.04,
+    "d2": 37.07,
+    "comb_ratio": 1.0,
+    "lap": 242633
+   },
+   "after": {
+    "d1": 34.8,
+    "d2": 34.86,
+    "comb_ratio": 1.0,
+    "lap": 227813
+   },
+   "temporal_before": 44.74,
+   "temporal_after": 52.56,
+   "dims": "640x480",
+   "format": "YUV422P10",
+   "frames": 24,
+   "secs": 0.5
+  },
+  "eedi2": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "interlaced",
+   "before": {
+    "d1": 0.05,
+    "d2": 0.09,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "after": {
+    "d1": 0.2,
+    "d2": 0.41,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "temporal_before": 17.24,
+   "temporal_after": 17.24,
+   "dims": "640x480",
+   "format": "YUV422P10",
+   "frames": 48,
+   "secs": 0.3
+  },
+  "eedi3": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "interlaced",
+   "before": {
+    "d1": 0.05,
+    "d2": 0.09,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "after": {
+    "d1": 0.91,
+    "d2": 0.91,
+    "comb_ratio": 1.0,
+    "lap": 1184
+   },
+   "temporal_before": 17.24,
+   "temporal_after": 17.58,
+   "dims": "640x240",
+   "format": "YUV422P10",
+   "frames": 48,
+   "secs": 0.5
+  },
+  "focus2_temporal": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "flicker",
+   "before": {
+    "d1": 5.05,
+    "d2": 4.43,
+    "comb_ratio": 1.14,
+    "lap": 22416
+   },
+   "after": {
+    "d1": 5.05,
+    "d2": 4.43,
+    "comb_ratio": 1.14,
+    "lap": 22436
+   },
+   "temporal_before": 22.86,
+   "temporal_after": 22.84,
+   "dims": "640x480",
+   "format": "YUV422P10",
+   "frames": 24,
+   "secs": 0.3
+  },
+  "lghost": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "motion",
+   "before": {
+    "d1": 0.05,
+    "d2": 0.09,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "after": {
+    "d1": 0.05,
+    "d2": 0.1,
+    "comb_ratio": 0.5,
+    "lap": 7
+   },
+   "temporal_before": 16.06,
+   "temporal_after": 20.41,
+   "dims": "640x480",
+   "format": "YUV422P10",
+   "frames": 24,
+   "secs": 0.2
+  },
+  "mv_blockfps": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "motion",
+   "before": {
+    "d1": 0.05,
+    "d2": 0.09,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "after": {
+    "d1": 0.05,
+    "d2": 0.09,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "temporal_before": 16.06,
+   "temporal_after": 16.06,
+   "dims": "640x480",
+   "format": "YUV422P10",
+   "frames": 47,
+   "secs": 0.3
+  },
+  "neo_f3kdb": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "noise",
+   "before": {
+    "d1": 37.04,
+    "d2": 37.07,
+    "comb_ratio": 1.0,
+    "lap": 242633
+   },
+   "after": {
+    "d1": 37.04,
+    "d2": 37.07,
+    "comb_ratio": 1.0,
+    "lap": 242672
+   },
+   "temporal_before": 44.74,
+   "temporal_after": 44.74,
+   "dims": "640x480",
+   "format": "YUV422P10",
+   "frames": 24,
+   "secs": 0.3
+  },
+  "nlm_ispc": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "noise",
+   "before": {
+    "d1": 37.04,
+    "d2": 37.07,
+    "comb_ratio": 1.0,
+    "lap": 242633
+   },
+   "after": {
+    "d1": 25.5,
+    "d2": 25.85,
+    "comb_ratio": 0.99,
+    "lap": 164180
+   },
+   "temporal_before": 44.74,
+   "temporal_after": 78.66,
+   "dims": "640x480",
+   "format": "YUV422P10",
+   "frames": 24,
+   "secs": 0.3
+  },
+  "nnedi3_upscale": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "motion",
+   "before": {
+    "d1": 0.05,
+    "d2": 0.09,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "after": {
+    "d1": 0.03,
+    "d2": 0.22,
+    "comb_ratio": 0.15,
+    "lap": 6779
+   },
+   "temporal_before": 16.06,
+   "temporal_after": 16.03,
+   "dims": "1280x960",
+   "format": "YUV422P10",
+   "frames": 24,
+   "secs": 0.4
+  },
+  "rdvs_restore": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "interlaced",
+   "before": {
+    "d1": 0.05,
+    "d2": 0.09,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "after": {
+    "d1": 0.05,
+    "d2": 0.09,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "temporal_before": 17.24,
+   "temporal_after": 3.22,
+   "dims": "640x480",
+   "format": "YUV420P8",
+   "frames": 24,
+   "secs": 0.3
+  },
+  "sangnom": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "interlaced",
+   "before": {
+    "d1": 0.05,
+    "d2": 0.09,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "after": {
+    "d1": 0.2,
+    "d2": 0.41,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "temporal_before": 17.24,
+   "temporal_after": 0.55,
+   "dims": "640x480",
+   "format": "YUV420P16",
+   "frames": 24,
+   "secs": 0.3
+  },
+  "scdetect": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "motion",
+   "before": {
+    "d1": 0.05,
+    "d2": 0.09,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "after": {
+    "d1": 0.05,
+    "d2": 0.09,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "temporal_before": 16.06,
+   "temporal_after": 16.06,
+   "dims": "640x480",
+   "format": "YUV422P10",
+   "frames": 24,
+   "secs": 0.3
+  },
+  "smoothuv": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "interlaced",
+   "before": {
+    "d1": 0.05,
+    "d2": 0.09,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "after": {
+    "d1": 0.05,
+    "d2": 0.09,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "temporal_before": 17.24,
+   "temporal_after": 3.22,
+   "dims": "640x480",
+   "format": "YUV420P8",
+   "frames": 24,
+   "secs": 0.2
+  },
+  "tcomb": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "interlaced",
+   "before": {
+    "d1": 0.05,
+    "d2": 0.09,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "after": {
+    "d1": 0.05,
+    "d2": 0.45,
+    "comb_ratio": 0.1,
+    "lap": 2120
+   },
+   "temporal_before": 17.24,
+   "temporal_after": 2.72,
+   "dims": "640x480",
+   "format": "YUV420P8",
+   "frames": 24,
+   "secs": 0.3
+  },
+  "text_clipinfo": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "motion",
+   "before": {
+    "d1": 0.05,
+    "d2": 0.09,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "after": {
+    "d1": 0.09,
+    "d2": 0.19,
+    "comb_ratio": 0.44,
+    "lap": 0
+   },
+   "temporal_before": 16.06,
+   "temporal_after": 16.06,
+   "dims": "640x480",
+   "format": "YUV422P10",
+   "frames": 24,
+   "secs": 0.2
+  },
+  "ttmpsm": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "flicker",
+   "before": {
+    "d1": 5.05,
+    "d2": 4.43,
+    "comb_ratio": 1.14,
+    "lap": 22416
+   },
+   "after": {
+    "d1": 0.66,
+    "d2": 0.79,
+    "comb_ratio": 0.84,
+    "lap": 4680
+   },
+   "temporal_before": 22.86,
+   "temporal_after": 3.01,
+   "dims": "640x480",
+   "format": "YUV422P10",
+   "frames": 24,
+   "secs": 0.3
+  },
+  "tweak": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "motion",
+   "before": {
+    "d1": 0.05,
+    "d2": 0.09,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "after": {
+    "d1": 0.05,
+    "d2": 0.1,
+    "comb_ratio": 0.51,
+    "lap": 8
+   },
+   "temporal_before": 16.06,
+   "temporal_after": 14.05,
+   "dims": "640x480",
+   "format": "YUV422P10",
+   "frames": 24,
+   "secs": 0.3
+  },
+  "warp_awarpsharp2": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "motion",
+   "before": {
+    "d1": 0.05,
+    "d2": 0.09,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "after": {
+    "d1": 0.04,
+    "d2": 0.09,
+    "comb_ratio": 0.5,
+    "lap": 0
+   },
+   "temporal_before": 16.06,
+   "temporal_after": 16.06,
+   "dims": "640x480",
+   "format": "YUV422P10",
+   "frames": 24,
+   "secs": 0.3
+  },
+  "wnnm": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "noise",
+   "before": {
+    "d1": 37.04,
+    "d2": 37.07,
+    "comb_ratio": 1.0,
+    "lap": 242633
+   },
+   "after": {
+    "d1": 36.6,
+    "d2": 36.66,
+    "comb_ratio": 1.0,
+    "lap": 242259
+   },
+   "temporal_before": 44.74,
+   "temporal_after": 46.8,
+   "dims": "640x480",
+   "format": "YUV420P10",
+   "frames": 24,
+   "secs": 0.7
+  },
+  "zsmooth_temporal": {
+   "status": "PASS",
+   "why": null,
+   "note": "evaluated through the real runtime",
+   "fixture": "flicker",
+   "before": {
+    "d1": 5.05,
+    "d2": 4.43,
+    "comb_ratio": 1.14,
+    "lap": 22416
+   },
+   "after": {
+    "d1": 4.34,
+    "d2": 3.72,
+    "comb_ratio": 1.17,
+    "lap": 19610
+   },
+   "temporal_before": 22.86,
+   "temporal_after": 18.77,
+   "dims": "640x480",
+   "format": "YUV422P10",
+   "frames": 24,
+   "secs": 0.3
+  }
+ }
+}

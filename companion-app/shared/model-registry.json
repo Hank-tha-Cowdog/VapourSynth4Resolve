@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "note": "Curated optional-model registry. Pinned to exact upstream release assets; sha256 digests are the ones published by the upstream project on its official GitHub release (verified against the GitHub API Oct 26). A checksum proves the download matches the release — it is NOT proof the publisher is trustworthy. License entries are honest flags, not legal clearance.",
+  "models": [
+    {
+      "id": "vsmlrt-models-v15.16",
+      "label": "vs-mlrt Neural Models (RIFE interpolation + others)",
+      "purpose": "Neural frame interpolation (RIFE) and other neural restoration models for the vs-mlrt ONNX runtime. The macOS ONNX backend (core.ort / libvsort.dylib) is already installed; this pack provides the model weights.",
+      "publisher": "AmusementClub (github.com/AmusementClub/vs-mlrt)",
+      "version": "v15.16",
+      "source": "https://github.com/AmusementClub/vs-mlrt/releases/tag/v15.16",
+      "asset": "https://github.com/AmusementClub/vs-mlrt/releases/download/v15.16/models.v15.16.7z",
+      "sha256": "d4eaa8c1c4459082185a9e1a2c54d7e2c776abeea6aef6aee0cb8f6c151dfb02",
+      "downloadBytes": 852114227,
+      "diskBytesNeeded": 1800000000,
+      "archiveFormat": "7z",
+      "compatibleBackend": "core.ort (vs-mlrt macOS ONNX build — installed locally; upstream no longer ships macOS binaries)",
+      "licenseStatus": "REVIEW REQUIRED: the pack bundles converted model weights that retain their upstream licenses (RIFE upstream: Apache-2.0 per hzwer/RIFE; other models vary). Redistribution rights of the converted pack are NOT yet verified for our distribution. Per-user on-demand download is the intended flow; bundling into our DMG requires license review.",
+      "adapterAsset": {
+        "url": "https://github.com/AmusementClub/vs-mlrt/releases/download/v15.16/scripts.v15.16.7z",
+        "sha256": "d07dae0a00cb8dbf4f00358f640f630ff5d933de44d27050e7acce4f31cc3560",
+        "downloadBytes": 17732,
+        "note": "Python adapter scripts (vsmlrt package) — same upstream release; installs the RIFE wrapper the runtime needs"
+      },
+      "recommended": true,
+      "recommendationNote": "Supported default for neural interpolation on this Mac: vs-mlrt ONNX Runtime (CPU/CoreML execution) + this model pack. Classical motion-compensated interpolation (mv.BlockFPS) needs no download and is the bundled alternative."
+    }
+  ]
+}

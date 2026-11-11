@@ -1,0 +1,130 @@
+{
+  "_comment": "Stage playbooks — the pipeline block diagram as a set of agent-usable skills. One entry per canonical stage. Consumed by BOTH the renderer (PipelinePanel teaching layer, src/services/stage-playbooks.ts) and the main process (get_stage_playbook tool in electron/tools/registry.js). Keep it plain JSON so there is exactly one source of truth.",
+  "stages": [
+    {
+      "stage": 10,
+      "key": "preprocess",
+      "title": "Preprocess",
+      "purpose": "Anything that must happen before the structured pipeline — geometry fixes, head-switching crop prep, custom Python that later stages depend on.",
+      "whenToUse": "Parity-preserving crops that must precede field operations (e.g. 486→480 NTSC digitizations), levels sanitation, format quirks.",
+      "canonicalFilters": [
+        "script"
+      ],
+      "keyParams": {},
+      "notes": "A 486-line NTSC capture is not mod-4 and carries 6 blanking lines; crop top=4 bottom=2 BEFORE deinterlacing. An even top-crop preserves field parity — an odd crop silently flips TFF↔BFF."
+    },
+    {
+      "stage": 20,
+      "key": "field-ops",
+      "title": "Field Operations",
+      "purpose": "Resolve field structure into progressive frames. Everything downstream assumes progressive input — motion estimation, denoisers, and sharpeners all misbehave on combed frames.",
+      "whenToUse": "Any interlaced source (25i/29.97i tape, DV, broadcast masters), telecined film (IVTC instead of deinterlace), or progressive material with residual combing (QTGMC InputType=1 repair mode).",
+      "canonicalFilters": [
+        "qtgmc",
+        "script"
+      ],
+      "keyParams": {
+        "preset": "Speed↔quality master control. 'Slower' is the archival default; 'Fast'/'Draft' for iteration.",
+        "tff": "Field order — ALWAYS from the pixel-content verdict (probe idet), never the container flag. Containers lie on real tapes.",
+        "fpsDivisor": "2 = single-rate: one full-height motion-compensated frame per source frame (NO bob, frame count preserved). 1 = double-rate bob at 2× fps — only as an internal feed for srestore or for 50p/59.94p sports-style delivery.",
+        "inputType": "0 interlaced · 1 progressive-with-combing repair · 2/3 progressive deshimmer variants.",
+        "sourceMatch": "Refines the motion-compensated result back toward the TRUE source fields. Use 3 for archival work. NOT optional on blend-recovery jobs: without it QTGMC's interpolated fields drift from the source and srestore's cadence decision lands on the wrong frames — measured 4 combed frames in 750 without it, 0 in 7401 with it. Independent of 'lossless' below — SourceMatch=3 stays required whatever Lossless is set to; confirmed by a 405-probe frame-alignment check that srestore's cadence lock is identical either way.",
+        "lossless": "CORRECTED 2026-08-11 — this was documented as 'use 2' through v4 of the reference work and it was wrong. Lossless=2 reinstates the tape's ORIGINAL field lines verbatim among lines that have been motion-compensated and temporally smoothed; that alternation between original and smoothed rows is energy at the vertical Nyquist frequency — a stationary comb, invisible at native resolution and a staircase once enlarged. Use 0. Measured on the reference job: comb ratio 9.09 (Lossless=2) vs 0.85 (Lossless=0) on a static shot, costing about 2% of vertical detail. The old note here also claimed 98.8% grain retention for Lossless=2 — that figure was computed without regard to direction, so the comb it was creating counted as texture and concealed a real loss; measured correctly (grain_h) the true figure was 74.2%. See 'thSAD2' for how the grain is actually recovered.",
+        "thSAD2": "QTGMC's final temporal smooth (TR2, the 'clean up any remaining shimmer' pass) is a denoiser regardless of NoiseProcess, and at its default (256) it ate roughly a quarter of this tape's fine grain. Lowering ThSAD2 makes TR2 fussier about which blocks it is willing to average across frames, which returns the grain without touching Lossless. 96 is the validated value for this material: 89.5% grain retention against 74.2% at the default, for about 6% of vertical mid-band detail. Below about 64 the trade overshoots 100% retention, which is sharpening rather than preservation — sweep the value before trusting a new value on different material.",
+        "noiseProcess": "Set 0 for preservation work. Presets above 'Slower' enable QTGMC's noise processing, which (a) needs fft3dfilter, absent in this arm64 plugin set, and (b) alters the tape's own grain — wrong for a preservation master. Denoise, if wanted at all, belongs in its own reviewable stage."
+      },
+      "notes": "QTGMC is not a line doubler — it motion-compensates BOTH fields into every output frame, so single-rate output keeps full vertical detail. TFF must be a Python bool (True/False); havsfunc rejects 0/1."
+    },
+    {
+      "stage": 30,
+      "key": "crop",
+      "title": "Crop / Borders",
+      "purpose": "Remove head-switching noise, VHS bottom tear, and blanking edges after the image is progressive.",
+      "whenToUse": "Analog tape captures showing switching noise at frame bottom; overscan garbage on the sides.",
+      "canonicalFilters": [
+        "script"
+      ],
+      "keyParams": {},
+      "notes": "Post-deinterlace crops have no parity constraints (frames are progressive now). Crop, don't mask, when the delivery allows a resize afterwards."
+    },
+    {
+      "stage": 40,
+      "key": "denoise",
+      "title": "Denoise",
+      "purpose": "Remove tape noise and chroma noise BEFORE sharpening and frame interpolation — both amplify whatever noise survives.",
+      "whenToUse": "VHS/8mm chroma noise, DV mosquito noise, low-light grain. Skip or keep gentle for film grain you intend to preserve.",
+      "canonicalFilters": [
+        "script"
+      ],
+      "keyParams": {
+        "sigma": "BM3D strength — start 2–3 for tape, judge on a still + in motion.",
+        "ezDenoise": "Alternatively QTGMC's EZDenoise (stage 20) handles light cleanup during deinterlace in one pass."
+      },
+      "notes": "Temporal denoisers need stable motion — that is why Denoise sits after Field Ops and before Frame Ops in the canonical order."
+    },
+    {
+      "stage": 50,
+      "key": "restore",
+      "title": "Restore",
+      "purpose": "Damage repair: dropouts, dirt, scratches, stabilization.",
+      "whenToUse": "Film dirt/dust (RemoveDirt), gate weave (DePan/stab), tape dropouts.",
+      "canonicalFilters": [
+        "script"
+      ],
+      "keyParams": {},
+      "notes": "Runs after denoise so repair detectors aren't chasing noise; before sharpen so repairs aren't crisped into visibility."
+    },
+    {
+      "stage": 60,
+      "key": "sharpen",
+      "title": "Sharpen / Detail",
+      "purpose": "Recover perceived detail after temporal filtering.",
+      "whenToUse": "Soft standards-converted material, generation-loss tape. Prefer QTGMC's own Sharpness first — it sharpens inside the motion-compensated loop.",
+      "canonicalFilters": [
+        "script"
+      ],
+      "keyParams": {},
+      "notes": "Sharpen last-ish, always after noise/restore. Over-sharpened tape reads as 'video-y' — archival taste is conservative."
+    },
+    {
+      "stage": 70,
+      "key": "frame-ops",
+      "title": "Frame Operations",
+      "purpose": "Frame-rate surgery: cadence recovery, decimation, interpolation. This is where a blended standards conversion gets un-done.",
+      "whenToUse": "PAL↔NTSC standards-converted tape (srestore), telecine leftovers (decimation), retiming to a delivery rate (RIFE — v2.2).",
+      "canonicalFilters": [
+        "script",
+        "rife (v2.2)"
+      ],
+      "keyParams": {
+        "frate": "srestore target rate — the ORIGINAL native rate upstream of the converter (25 for PAL-origin material)."
+      },
+      "notes": "srestore requires a double-rate progressive feed (QTGMC FPSDivisor=1 at stage 20). How it works: an analog field-store standards converter created each NTSC field by cross-fading temporally adjacent PAL fields — so after bobbing, the 59.94p stream repeats a cadence of clean and blended frames (≈6 output frames per 5 source frames). srestore builds a per-frame blend metric, locks onto that repeating cadence, DISCARDS the blend-dominated frames, reconstructs partially-blended ones by inverting the crossfade weights against clean neighbours, and re-times the survivors to frate. Output: one clean progressive frame per original PAL frame — the motion cadence of the pre-conversion master, no bobbed look, no duplicates. Verify with mpdecimate (expect 0 dropped) and idet (expect 100% progressive).",
+      "caseStudy": "Client preservation: PAL master -> analog standards converter -> NTSC tape -> 720x486 29.97i BFF ProRes. Validated recipe (v5, corrected 2026-08-11): crop(top=4,bottom=2) -> QTGMC(Preset='Placebo', TFF=False, FPSDivisor=1, SourceMatch=3, Lossless=0, ThSAD2=96, NoiseProcess=0) -> srestore(frate=25). Result: exactly 25.000 fps, 7401/7401 progressive, comb ratio 0.79 (matching the client's own reference 4K), 0 duplicates, 89.5% of source grain retained. Earlier masters (v1-v4) shipped Lossless=2 in this recipe, which measured 98.8% grain retention and 0 combed frames by every check that existed — both true — while carrying a field-line comb (ratio 8.71) invisible at native resolution and visible once enlarged; the client caught it by comparing our 4K against their own. The full measurement notes are summarized in the project documentation. TWO further defects remained at cuts and are NOT srestore's fault: (A) a colour after-image on the first frame of the incoming shot — measured ~95% chromatic with luma error of 0.000, so it is an analog chroma-path lag with a ~2-frame time constant, NOT a surviving field blend (field-parity test is null everywhere); repair by substituting only the two CHROMA planes from the clean neighbour, which leaves motion intact and creates no duplicate frame. (B) a 'half frame' on the LAST frame of the outgoing shot — a spatial raster switch from a tape edit that missed a frame boundary, invisible to whole-frame metrics, found by row-profile analysis; repair by borrowing only the damaged band from the adjacent frame of the shot it belongs to (see the 'bandborrow' method), not whole-frame substitution."
+    },
+    {
+      "stage": 80,
+      "key": "resize",
+      "title": "Resize / Scale",
+      "purpose": "Geometric changes — up/downscale, aspect correction.",
+      "whenToUse": "Delivery scaling (SD→HD), PAR square-up. Geometry changes go last so every upstream filter works on unresampled pixels.",
+      "canonicalFilters": [
+        "script"
+      ],
+      "keyParams": {},
+      "notes": "A 486→480 standards-converted source cannot recover true 576-line PAL resolution — the vertical detail died in the analog converter. Scale for delivery, don't pretend to restore it."
+    },
+    {
+      "stage": 90,
+      "key": "format",
+      "title": "Format / Output",
+      "purpose": "Final chroma/bit-depth conversion before the output color transform.",
+      "whenToUse": "Delivery-specific subsampling or bit-depth requirements.",
+      "canonicalFilters": [
+        "script"
+      ],
+      "keyParams": {},
+      "notes": "The composer's output transform returns RGB 32-bit float to Resolve regardless; this stage is for intentional intermediate format moves."
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+*.log
+.DS_Store
+.env
+.env.local
+build-resources/*.p12
+build/
+dist/
+electron-builder-cache/
+node_modules/
+out/

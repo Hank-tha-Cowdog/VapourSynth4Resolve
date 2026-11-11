@@ -1,0 +1,247 @@
+[
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=False, FPSDivisor=2)\n",
+    "name": "default_slower",
+    "params": {
+      "fpsDivisor": 2,
+      "tff": false
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Placebo', TFF=False, FPSDivisor=1, SourceMatch=3, Lossless=0, ThSAD2=96)\n",
+    "name": "placebo_full",
+    "params": {
+      "fpsDivisor": 1,
+      "lossless": 0,
+      "preset": "Placebo",
+      "sourceMatch": 3,
+      "tff": false,
+      "thSad2": 96
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Draft', TFF=True, FPSDivisor=2)\n",
+    "name": "draft_preset",
+    "params": {
+      "preset": "Draft",
+      "tff": true
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Very Slow', TFF=True, FPSDivisor=2)\n",
+    "name": "very_slow_tff",
+    "params": {
+      "fpsDivisor": 2,
+      "preset": "Very Slow",
+      "tff": true
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Ultra Fast', InputType=1, FPSDivisor=2)\n",
+    "name": "ultra_fast_inputtype1",
+    "params": {
+      "inputType": 1,
+      "preset": "Ultra Fast",
+      "tff": true
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=True, InputType=2, FPSDivisor=2)\n",
+    "name": "inputtype2_deshimmer",
+    "params": {
+      "inputType": 2,
+      "tff": true
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=False, FPSDivisor=2, Sharpness=0.25)\n",
+    "name": "sharp_fraction",
+    "params": {
+      "sharpness": 0.25,
+      "tff": false
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=False, FPSDivisor=2, Sharpness=2.0)\n",
+    "name": "sharp_integer_double",
+    "params": {
+      "sharpness": 2,
+      "tff": false
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=False, FPSDivisor=2, Sharpness=0.10000000000000001)\n",
+    "name": "sharp_tight_double",
+    "params": {
+      "sharpness": 0.1,
+      "tff": false
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=False, FPSDivisor=2, EZDenoise=2.5)\n",
+    "name": "ezdenoise_25",
+    "params": {
+      "ezDenoise": 2.5,
+      "tff": false
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=False, FPSDivisor=2, EZKeepGrain=0.5)\n",
+    "name": "ezkeepgrain_half",
+    "params": {
+      "ezKeepGrain": 0.5,
+      "tff": false
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=False, FPSDivisor=2, TR2=3)\n",
+    "name": "tr2_3",
+    "params": {
+      "tff": false,
+      "tr2": 3
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=False, FPSDivisor=2, NoiseProcess=0)\n",
+    "name": "noiseprocess_zero",
+    "params": {
+      "noiseProcess": 0,
+      "tff": false
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slow', TFF=True, FPSDivisor=1, Sharpness=0.5, TR2=3, SourceMatch=3, Lossless=2, ThSAD2=96, NoiseProcess=1, EZDenoise=2.5, EZKeepGrain=0.59999999999999998)\n",
+    "name": "full_options",
+    "params": {
+      "ezDenoise": 2.5,
+      "ezKeepGrain": 0.6,
+      "fpsDivisor": 1,
+      "lossless": 2,
+      "noiseProcess": 1,
+      "preset": "Slow",
+      "sharpness": 0.5,
+      "sourceMatch": 3,
+      "tff": true,
+      "thSad2": 96,
+      "tr2": 3
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=False, FPSDivisor=2)\n",
+    "name": "minimal_tff_false",
+    "params": {
+      "tff": false
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=True, FPSDivisor=2)\n",
+    "name": "wrong_type_tff_string",
+    "params": {
+      "tff": "false"
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=True, FPSDivisor=2)\n",
+    "name": "wrong_type_fpsdivisor_string",
+    "params": {
+      "fpsDivisor": "2"
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=True, FPSDivisor=2)\n",
+    "name": "wrong_type_preset_number",
+    "params": {
+      "preset": 7
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=True, FPSDivisor=2)\n",
+    "name": "wrong_type_inputtype_oor",
+    "params": {
+      "inputType": 5,
+      "tff": true
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=False, FPSDivisor=2)\n",
+    "name": "wrong_type_tr2_float",
+    "params": {
+      "tff": false,
+      "tr2": 2.5
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=False, FPSDivisor=2)\n",
+    "name": "sourcematch_zero_omitted",
+    "params": {
+      "sourceMatch": 0,
+      "tff": false
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=True, FPSDivisor=2)\n",
+    "name": "null_fields",
+    "params": {
+      "fpsDivisor": null,
+      "inputType": null,
+      "preset": null,
+      "tff": null
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=False, FPSDivisor=2, ThSAD2=4096)\n",
+    "name": "thSad2_4096",
+    "params": {
+      "tff": false,
+      "thSad2": 4096
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=False, FPSDivisor=2, Sharpness=-1.5)\n",
+    "name": "sharp_negative",
+    "params": {
+      "sharpness": -1.5,
+      "tff": false
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=False, FPSDivisor=2, Sharpness=1.0000000000000001e-05)\n",
+    "name": "sharp_exp_neg5",
+    "params": {
+      "sharpness": 1e-05,
+      "tff": false
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=False, FPSDivisor=2, Sharpness=1.0000000000000001e-09)\n",
+    "name": "sharp_exp_neg9",
+    "params": {
+      "sharpness": 1e-09,
+      "tff": false
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=False, FPSDivisor=2, Sharpness=123456789.5)\n",
+    "name": "sharp_large_fixed",
+    "params": {
+      "sharpness": 123456789.5,
+      "tff": false
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=False, FPSDivisor=2, Sharpness=1e+17)\n",
+    "name": "sharp_exp_17plus",
+    "params": {
+      "sharpness": 1e+17,
+      "tff": false
+    }
+  },
+  {
+    "expected": "clip = havs.QTGMC(clip, Preset='Slower', TFF=False, FPSDivisor=2, EZDenoise=0.29999999999999999)\n",
+    "name": "ezdenoise_fraction_edge",
+    "params": {
+      "ezDenoise": 0.3,
+      "tff": false
+    }
+  }
+]

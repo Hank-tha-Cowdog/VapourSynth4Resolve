@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VapourSynth Companion</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+
+      :root {
+        --vsynth-bg-deep:    #0a0414;
+        --vsynth-bg-panel:   #100722;
+        --vsynth-bg-card:    #1a0830;
+        --vsynth-border:     #2a1850;
+        --vsynth-pink:       #ff2bd6;
+        --vsynth-purple:     #8a2be2;
+        --vsynth-text:       #f0e6ff;
+      }
+
+      html, body, #root {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background-color: var(--vsynth-bg-deep);
+        color: var(--vsynth-text);
+        overflow: hidden;
+      }
+
+      code, pre, .font-mono {
+        font-family: 'JetBrains Mono', monospace;
+      }
+
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-track { background: var(--vsynth-bg-deep); }
+      ::-webkit-scrollbar-thumb { background: var(--vsynth-purple); border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: var(--vsynth-pink); }
+      ::-webkit-scrollbar-corner { background: var(--vsynth-bg-deep); }
+
+      @keyframes vsynth-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      .vsynth-spin { animation: vsynth-spin 1s linear infinite; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/index.tsx"></script>
+  </body>
+</html>
