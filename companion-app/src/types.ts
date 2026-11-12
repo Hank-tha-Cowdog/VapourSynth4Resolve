@@ -465,6 +465,9 @@ declare global {
                 error?: string;
             }>;
 
+            // Install/Update the OFX plugin for Resolve (bundled vsres-install helper).
+            pluginInstall?: (action: 'status' | 'install' | 'uninstall') => Promise<unknown>;
+
             // Ask the running DaVinci Resolve (via its Python scripting API) for the
             // file path of the clip at the current playhead. Zero-gesture auto-discovery
             // when the user has enabled scripting in Resolve preferences.

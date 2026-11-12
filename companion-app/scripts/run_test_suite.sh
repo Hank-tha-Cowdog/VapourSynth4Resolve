@@ -30,6 +30,14 @@ failed=()
 
 run_one() {
     local f="$1"; shift
+    if [ "$artifacts_present" -eq 0 ]; then
+        case "$ARTIFACT_SUITES" in
+            *" $(basename "$f") "*)
+                echo "SKIP $f (needs staged build artifacts / dev layout — release validation)"
+                return
+                ;;
+        esac
+    fi
     local log
     log="$(mktemp -t vsres-test.XXXXXX)"
     if "$NODE_BIN" --test --test-isolation=none "$@" "$f" >"$log" 2>&1; then
@@ -50,14 +58,6 @@ for f in electron/__test_*.js; do
             continue
             ;;
     esac
-    if [ "$artifacts_present" -eq 0 ]; then
-        case "$ARTIFACT_SUITES" in
-            *" $(basename "$f") "*)
-                echo "SKIP $f (needs staged build artifacts / dev layout — release validation)"
-                continue
-                ;;
-        esac
-    fi
     run_one "$f"
 done
 

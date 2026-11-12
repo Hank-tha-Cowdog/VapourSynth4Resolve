@@ -28,8 +28,11 @@ function source(file) {
 }
 const TRANSACTION_SOURCE = source(process.env.VSRES_MODEL_STAGE_TRANSACTION_SOURCE || path.join(__dirname, 'model-stage-transaction.js'));
 const IO_SOURCE = source(process.env.VSRES_MODEL_STAGE_IO_SOURCE || path.join(__dirname, 'model-stage-io.js'));
-const PARENT = path.resolve(process.env.VSRES_MODEL_STAGE_TEST_ROOT || process.env.TMPDIR || '');
-assert.ok(process.env.VSRES_MODEL_STAGE_TEST_ROOT || process.env.TMPDIR, 'explicit private fixture parent required');
+const RAW_PARENT = process.env.VSRES_MODEL_STAGE_TEST_ROOT || process.env.TMPDIR || '';
+assert.ok(RAW_PARENT, 'explicit private fixture parent required');
+// macOS TMPDIR is /var/... (a symlink to /private/var/...): canonicalize so the
+// canonical/private/owned contract below holds regardless of how it is spelled.
+const PARENT = fs.realpathSync(path.resolve(RAW_PARENT));
 const parentInfo = fs.lstatSync(PARENT);
 assert.ok(parentInfo.isDirectory() && !parentInfo.isSymbolicLink() && parentInfo.uid === process.getuid() &&
   (parentInfo.mode & 0o077) === 0 && fs.realpathSync(PARENT) === PARENT, 'fixture parent must be canonical/private/owned');

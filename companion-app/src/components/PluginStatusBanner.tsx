@@ -4,7 +4,8 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { CheckCircle2, AlertOctagon, MinusCircle, Loader2, ChevronDown, X } from 'lucide-react';
 import {
     INITIAL_STATUS_FEED, pollPluginStatus, statusPresentation,
-    type StatusFeed, type StatusTone,
+    parseInstallResult, installStatusLine,
+    type StatusFeed, type StatusTone, type InstallAction, type InstallResult,
 } from '../services/plugin-status';
 
 export const PluginStatusBanner: React.FC = () => {
@@ -172,12 +173,79 @@ export const StatusTitleIcon: React.FC<{ feed: StatusFeed; now: number }> = ({ f
                         borderColor: '#925065', maxHeight: 180, overflow: 'auto' }}>{error}</pre>}
                     {report?.scriptPreview && <pre tabIndex={0} style={{ ...preStyle, maxHeight: 140, overflow: 'auto' }}>
                         {report.scriptPreview}</pre>}
+                    <ResolveInstallSection />
                     <p style={{ margin: '6px 0 0', opacity: 0.6, fontSize: 10.5 }}>
                         A shared status report can precede rendering; reading it again never
                         implies Resolve is running now. Age and uncertainty are shown.
                     </p>
                 </div>
             )}
+        </div>
+    );
+};
+
+/** Install/Update the OFX plugin for Resolve. Thin UI over the bundled
+ *  vsres-install helper (spawned in main, trust-gated; the helper verifies the
+ *  source bundle before macOS asks for authorization once, and keeps the
+ *  previous install as a timestamped backup). */
+export const ResolveInstallSection: React.FC = () => {
+    const [status, setStatus] = useState<InstallResult | null>(null);
+    const [checking, setChecking] = useState(true);
+    const [busy, setBusy] = useState<InstallAction | null>(null);
+    const [last, setLast] = useState<string | null>(null);
+
+    const read = async (): Promise<InstallResult | null> => {
+        try { return parseInstallResult(await window.electron?.pluginInstall?.('status')); }
+        catch { return { ok: false, error: 'status check failed' }; }
+    };
+    useEffect(() => {
+        let alive = true;
+        read().then(s => { if (alive) { setStatus(s); setChecking(false); } });
+        return () => { alive = false; };
+    }, []);
+
+    const run = async (action: 'install' | 'uninstall') => {
+        setBusy(action); setLast(null);
+        try {
+            const v = parseInstallResult(await window.electron?.pluginInstall?.(action));
+            if (v?.ok) {
+                setLast(action === 'install'
+                    ? `Installed${v.installed_version ? ` v${v.installed_version}` : ''}${v.used_admin ? ' (authorized)' : ''}${v.backup ? ' — previous copy backed up' : ''}.`
+                    : 'Removed (previous copy kept as a backup).');
+                setStatus(await read());
+            } else {
+                setLast(v?.error ? `Failed: ${v.error}` : 'Failed.');
+            }
+        } catch (err) { setLast(`Failed: ${String(err)}`); }
+        finally { setBusy(null); }
+    };
+
+    const installed = !!(status?.ok && status.installed);
+    const blocked = !!status?.resolve_running;
+    return (
+        <div style={{ borderTop: '1px solid #493857', marginTop: 8, paddingTop: 8 }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', flexWrap: 'wrap' }}>
+                <strong style={{ fontSize: 11.5 }}>Resolve plugin</strong>
+                <span style={{ opacity: 0.85 }}>{checking ? 'Checking…' : installStatusLine(status)}</span>
+            </div>
+            <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+                <button type="button" onClick={() => run('install')} disabled={!!busy || blocked}
+                    title={blocked ? 'Quit DaVinci Resolve first — the plugin file is in use.' : undefined}
+                    style={{ ...buttonStyle, minHeight: 28, padding: '3px 10px', fontSize: 11,
+                        opacity: busy || blocked ? 0.55 : 1 }}>
+                    {busy === 'install' ? 'Installing…' : installed ? 'Update for Resolve' : 'Install for Resolve'}
+                </button>
+                {installed && <button type="button" onClick={() => run('uninstall')} disabled={!!busy || blocked}
+                    style={{ ...buttonStyle, minHeight: 28, padding: '3px 10px', fontSize: 11,
+                        opacity: busy || blocked ? 0.55 : 1 }}>
+                    {busy === 'uninstall' ? 'Removing…' : 'Remove'}
+                </button>}
+            </div>
+            {last && <p style={{ margin: '6px 0 0', fontSize: 10.5 }}>{last}</p>}
+            <p style={{ margin: '6px 0 0', opacity: 0.6, fontSize: 10 }}>
+                Copies the bundled OFX plugin into /Library/OFX/Plugins (macOS asks for
+                authorization once; the previous copy is kept as a backup).
+            </p>
         </div>
     );
 };

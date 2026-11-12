@@ -182,7 +182,8 @@ let statusPath = null;
 // OFX bundle's embedded CPython framework — the same interpreter the preview
 // path uses. resolveRuntimes() reports absent components honestly instead
 // of assuming paths that may not exist on the installed machine.
-const { resolveRuntimes } = require('./prod-paths');
+const { resolveRuntimes, helperScript } = require('./prod-paths');
+const { resolveInstallHelper, buildArgs, runInstaller } = require('./plugin-install');
 const { disposeAllWorkers } = require('./preview-worker');
 const RUNTIMES = resolveRuntimes({
   resourcesPath: isDev ? path.join(__dirname, '../runtime') : process.resourcesPath,
@@ -922,6 +923,35 @@ app.whenReady().then(() => {
   // NODE-SPECIFIC: prefers the per-GUID copy the host writes
   // (nodes/<guid>.vpy) so the view can never show another node's script;
   // the global file is a legacy fallback only.
+  // ---- Install/Update the OFX plugin for Resolve (trusted sender only) ----
+  // Runs the bundled zero-dependency Rust helper (Resources/bin/vsres-install).
+  // The helper refuses while Resolve is running and verifies the source bundle
+  // signature before asking macOS for an explicit authorization; this handler
+  // routes the request and surfaces the helper's JSON result verbatim.
+  ipcMain.handle('plugin:install', async (event, request) => {
+    if (!isTrustedSender(event)) {
+      return { ok: false, error: 'Untrusted sender: plugin installation is available only to its own editor window.' };
+    }
+    const action = request && typeof request.action === 'string' ? request.action : 'status';
+    if (!['status', 'install', 'uninstall'].includes(action)) {
+      return { ok: false, error: `Unknown install action: ${action}` };
+    }
+    const helper = resolveInstallHelper();
+    if (!helper) {
+      return { ok: false, error: 'The installer helper is not present in this build (packaged builds ship Resources/bin/vsres-install; dev builds run companion-app/scripts/build-install-helper.sh).' };
+    }
+    let args;
+    try {
+      args = buildArgs(action, {
+        bundlePath: RUNTIMES.ofxBundle.exists ? RUNTIMES.ofxBundle.path : undefined,
+        tomlHelper: helperScript('install_ofx_toml.py') || undefined,
+      });
+    } catch (err) {
+      return { ok: false, error: String((err && err.message) || err) };
+    }
+    return await runInstaller({ spawnImpl: spawn, helper, args });
+  });
+
   ipcMain.handle('plugin:read-composed-script', (_event, request) => {
     try {
       const dir = path.join(os.homedir(), 'Library/Application Support/VapourSynth-OFX');

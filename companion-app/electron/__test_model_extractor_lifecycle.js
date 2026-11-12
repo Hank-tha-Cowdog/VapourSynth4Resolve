@@ -17,7 +17,7 @@ const DEFAULT_TIMEOUT = 30 * 60 * 1000;
 const DEFAULT_OUTPUT = 4 * 1024 * 1024;
 
 function harness(t, options = {}) {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'vsres-extract-life-'));
+    const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'vsres-extract-life-')));
     const models = path.join(root, 'models'), id = 'fixture-model', dir = path.join(models, id);
     const marker = path.join(dir, 'extracted.json'), flag = path.join(dir, FLAG);
     fs.mkdirSync(dir, { recursive: true });

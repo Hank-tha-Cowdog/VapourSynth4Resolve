@@ -161,3 +161,61 @@ export function statusPresentation(feed: StatusFeed, now: number): StatusPresent
         tone: r.state === 'chain-error' || r.state === 'config-apply-unconfirmed' || r.state === 'config-apply-refused' ? 'error' : r.state === 'chain-ok' ? 'configured'
             : r.state === 'chain-disabled' || r.state === 'chain-awaiting-approval' ? 'warning' : 'neutral' };
 }
+
+
+// ── Resolve plugin installation (vsres-install helper) ────────────────────
+// The main process runs the bundled helper; these helpers validate its JSON
+// and derive the human-readable line. Parsing is strict: anything without a
+// boolean `ok` is rejected so a malformed reply can never render as success.
+export type InstallAction = 'status' | 'install' | 'uninstall';
+
+export interface InstallResult {
+    ok: boolean;
+    error?: string;
+    installed?: boolean;
+    version?: string | null;
+    path?: string;
+    resolve_running?: boolean;
+    helper_version?: string;
+    backup_count?: number;
+    action?: string;
+    installed_version?: string | null;
+    backup?: string | null;
+    used_admin?: boolean;
+    toml_ok?: boolean;
+    toml_output?: string;
+    removed?: boolean;
+}
+
+export function parseInstallResult(value: unknown): InstallResult | null {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+    const r = value as Record<string, unknown>;
+    if (typeof r.ok !== 'boolean') return null;
+    const out: InstallResult = { ok: r.ok };
+    if (typeof r.error === 'string') out.error = r.error;
+    if (typeof r.installed === 'boolean') out.installed = r.installed;
+    if (r.version === null || typeof r.version === 'string') out.version = r.version as string | null;
+    if (typeof r.path === 'string') out.path = r.path;
+    if (typeof r.resolve_running === 'boolean') out.resolve_running = r.resolve_running;
+    if (typeof r.helper_version === 'string') out.helper_version = r.helper_version;
+    if (typeof r.backup_count === 'number') out.backup_count = r.backup_count;
+    if (typeof r.action === 'string') out.action = r.action;
+    if (r.installed_version === null || typeof r.installed_version === 'string') {
+        out.installed_version = r.installed_version as string | null;
+    }
+    if (r.backup === null || typeof r.backup === 'string') out.backup = r.backup as string | null;
+    if (typeof r.used_admin === 'boolean') out.used_admin = r.used_admin;
+    if (typeof r.toml_ok === 'boolean') out.toml_ok = r.toml_ok;
+    if (typeof r.toml_output === 'string') out.toml_output = r.toml_output;
+    if (typeof r.removed === 'boolean') out.removed = r.removed;
+    return out;
+}
+
+export function installStatusLine(status: InstallResult | null): string {
+    if (!status) return 'Installation state unavailable.';
+    if (!status.ok) return status.error ? `Installer: ${status.error}` : 'Installer error.';
+    const installed = status.installed
+        ? `installed${status.version ? ` (v${status.version})` : ''}`
+        : 'not installed';
+    return `Plugin ${installed}${status.resolve_running ? ' — DaVinci Resolve is running' : ''}.`;
+}

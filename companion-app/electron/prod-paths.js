@@ -63,6 +63,21 @@ function resolveRuntimes({ resourcesPath } = {}) {
         pythonHome: path.join(runtimeRoot, 'python'),
         ffmpeg: { path: path.join(runtimeRoot, 'ffmpeg', 'ffmpeg'), exists: false },
         ffprobe: { path: ffprobe, exists: executableFile(ffprobe) },
+        // OFX bundle ROOT — the source for the install-for-Resolve helper.
+        // Packaged: Resources/OFX; dev fallback: the staged portable bundle.
+        ofxBundle: (function () {
+            const bundled = path.join(res, 'OFX', 'VapourSynth.ofx.bundle');
+            if (res && !isAsar(bundled)
+                && fs.existsSync(path.join(bundled, 'Contents', 'MacOS', 'VapourSynth.ofx'))) {
+                return { path: bundled, exists: true };
+            }
+            const dev = path.join(__dirname, '..', '..', 'build-portable', 'portable',
+                'VapourSynth.ofx.bundle');
+            if (fs.existsSync(path.join(dev, 'Contents', 'MacOS', 'VapourSynth.ofx'))) {
+                return { path: dev, exists: true };
+            }
+            return { path: bundled, exists: false };
+        })(),
         // SELF-CONTAINMENT (2026-10-31): the shipped OFX bundle stages the
         // curated filter-plugin set at Contents/Plugins — prefer it; the
         // user dir (install_vendored_plugins.py output) is the dev/machine
@@ -81,4 +96,4 @@ function resolveRuntimes({ resourcesPath } = {}) {
     };
 }
 
-module.exports = { helperScript, resolveRuntimes, isAsar };
+module.exports = { helperScript, resolveRuntimes, isAsar, executableFile };

@@ -130,4 +130,7 @@ contextBridge.exposeInMainWorld('electron', {
 
   // Plugin status (OFX-side render state surfaced for the popout banner)
   readPluginStatus: () => ipcRenderer.invoke('plugin:read-status'),
+
+  // Install/Update the OFX plugin for Resolve (bundled vsres-install helper)
+  pluginInstall: (action) => ipcRenderer.invoke('plugin:install', { action }),
 });

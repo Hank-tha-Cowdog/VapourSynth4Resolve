@@ -13,7 +13,8 @@
     "test:sample-filesystem": "node --test --test-isolation=none --test-timeout=5000 electron/tools/__test_registry_filesystem.js",
     "preview": "vite preview",
     "electron:dev": "concurrently \"cross-env BROWSER=none npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
-    "dist": "npm run build && node ../scripts/audit_release_payload.js --inputs-only && electron-builder && node ../scripts/audit_release_payload.js --output-only",
+    "dist": "npm run build && npm run build:installer && node ../scripts/audit_release_payload.js --inputs-only && electron-builder && node ../scripts/audit_release_payload.js --output-only",
+    "build:installer": "bash scripts/build-install-helper.sh",
     "dist:audit": "node ../scripts/audit_release_payload.js",
     "postinstall": "electron-builder install-app-deps"
   },
@@ -103,6 +104,13 @@
         ]
       },
       {
+       "from": "resources/bin",
+       "to": "bin",
+       "filter": [
+        "vsres-install"
+       ]
+      },
+      {
         "from": "../build-portable/portable/VapourSynth.ofx.bundle",
         "to": "OFX/VapourSynth.ofx.bundle",
         "filter": [
@@ -116,6 +124,7 @@
         "to": "scripts",
         "filter": [
           "render_preview_frame.py",
+          "install_ofx_toml.py",
           "probe_vs_plugins.py",
           "probe_rife.py",
           "resolve-query.py"

@@ -8,3 +8,6 @@ dist/
 electron-builder-cache/
 node_modules/
 out/
+
+# Staged install helper (built by scripts/build-install-helper.sh)
+resources/bin/
