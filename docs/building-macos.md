@@ -22,10 +22,10 @@
 ## Build VapourSynth from source (preferred — pin to a known version)
 
 ```sh
-./scripts/build-vapoursynth.sh R75
+./scripts/build-vapoursynth.sh R82
 ```
 
-Builds VapourSynth into `vendor/vapoursynth/install-R75/` and symlinks `vendor/vapoursynth/active -> install-R75`. The script:
+Builds VapourSynth into `vendor/vapoursynth/install-R82/` and symlinks `vendor/vapoursynth/active -> install-R82`. The script:
 
 - Verifies brew has `zimg` and `python@3.11`
 - Creates an isolated Python venv at `vendor/vapoursynth/.venv` and pip-installs `meson`, `ninja`, `cython`

@@ -13,7 +13,7 @@ os.environ["VAPOURSYNTH_EXTRA_PLUGIN_PATH"] = os.path.expanduser(
 sys.path.insert(0, os.path.expanduser("~/Library/Application Support/VapourSynth-OFX/vs-python"))
 _local = os.path.expanduser(
     "~/development_projects/00_vs_for_resolve/01_codebase/VapourSynth-for-Resolve"
-    "/vendor/vapoursynth/install-R75/lib/python3.14/site-packages")
+    "/vendor/vapoursynth/active/lib/python3.14/site-packages")
 if os.path.isdir(_local):
     sys.path.insert(0, _local)
 

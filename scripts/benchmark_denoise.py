@@ -30,7 +30,7 @@ if SOURCE.endswith(".json"):
 
 import vapoursynth as vs
 core = vs.core
-print(f"VS core: {vs.core_version() if hasattr(vs, 'core_version') else 'R75'}")
+print(f"VS core: {vs.core_version() if hasattr(vs, 'core_version') else 'unknown'}")
 print(f"source: {SOURCE}")
 
 src = core.lsmas.LWLibavSource(SOURCE)

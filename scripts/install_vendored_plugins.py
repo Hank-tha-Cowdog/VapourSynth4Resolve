@@ -36,8 +36,8 @@ import tempfile
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VENDOR_LIB = os.path.join(REPO, "vendor", "Macos_vapoursynth_plugins", "lib")
 USER_PLUGINS = os.path.expanduser("~/Library/Application Support/VapourSynth/Plugins")
-VENDOR_SITE = os.path.join(REPO, "vendor", "vapoursynth", "install-R75",
-                           "lib", "python3.14", "site-packages")
+VENDOR_SITE = os.path.join(REPO, "vendor", "vapoursynth", "active",
+                           "lib", "python3.14", "site-packages")  # active prefix (currently R82)
 
 BAD_RPATH = "@rpath/libc++.1.0.dylib"
 FIX_RPATH = "/usr/lib/libc++.1.dylib"

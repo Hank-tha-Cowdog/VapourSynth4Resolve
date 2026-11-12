@@ -59,16 +59,25 @@ already configured in `package.json`.
 
 ## Notarisation
 
-Not enabled yet — `mac.notarize` is `false` because no `AC_PASSWORD` keychain profile
-exists. To enable:
+Working pipeline (proven on v2.0.0-alpha.0, 2026-11-11): a keychain profile
+(`firstcut-notary`) is stored on this Mac; `mac.notarize` deliberately stays `false`
+because the release pass is explicit and ordered:
 
 ```sh
-xcrun notarytool store-credentials "AC_PASSWORD" \
-  --apple-id "<apple id>" --team-id 4ZT24C8JQZ --password "<app-specific password>"
+bash scripts/release/resign_release.sh "dist/mac-arm64/VapourSynth Companion.app"
+ditto -c -k --keepParent "dist/mac-arm64/VapourSynth Companion.app" /tmp/app.zip
+xcrun notarytool submit /tmp/app.zip --keychain-profile firstcut-notary --wait
+xcrun stapler staple "dist/mac-arm64/VapourSynth Companion.app"
+npx electron-builder --mac dmg --arm64 --prepackaged "dist/mac-arm64/VapourSynth Companion.app"
+xcrun notarytool submit "dist/VapourSynth Companion-2.0.0-alpha.0-arm64.dmg" \
+  --keychain-profile firstcut-notary --wait
+xcrun stapler staple "dist/VapourSynth Companion-2.0.0-alpha.0-arm64.dmg"
 ```
 
-then set `"notarize": true`. Without notarisation the DMG runs here but is blocked by
-Gatekeeper on other machines even when signed.
+`resign_release.sh` exists because electron-builder signs deep bundles outside-in
+(sealing the OFX bundle before its Plugins dylibs) — notarytool rejects that with
+"a sealed resource is missing or invalid". The pass also prunes CPython's stdlib
+test tree (sparse-zip fixtures cannot be notarized).
 
 ## What the DMG does NOT yet contain
 
@@ -79,7 +88,7 @@ More importantly, **the plugin is not yet portable** (TKT-DIST). It links agains
 absolute paths inside this build tree:
 
 ```
-/path/to/projects/.../vendor/vapoursynth/install-R75/lib/python3.14/
+/path/to/projects/.../vendor/vapoursynth/install-R82/lib/python3.14/
     site-packages/vapoursynth/libvsscript.dylib
 ```
 
@@ -115,7 +124,7 @@ internal paths, verified under `env -i` (no PATH/PYTHONPATH/user-site):
   under `env -i`.
 - Native runtime: sys.path puts the bundle's `Resources/vs-python` FIRST;
   `VAPOURSYNTH_EXTRA_PLUGIN_PATH` points at `Contents/Plugins` before any
-  core creation. NOTE: this VS R75 macOS build treats that env var as a
+  core creation. NOTE: this VS R82 macOS build treats that env var as a
   SINGLE path — an os.pathsep-joined list breaks ALL plugin loading (the
   old "append the user dir" code never worked; VS's default user-dir
   autoload did the loading).

@@ -17,7 +17,7 @@ os.environ["VAPOURSYNTH_EXTRA_PLUGIN_PATH"] = os.path.expanduser(
     "~/Library/Application Support/VapourSynth/Plugins")
 sys.path.insert(0, os.path.expanduser("~/Library/Application Support/VapourSynth-OFX/vs-python"))
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(REPO, "vendor", "vapoursynth", "install-R75",
+sys.path.insert(0, os.path.join(REPO, "vendor", "vapoursynth", "active",
                                 "lib", "python3.14", "site-packages"))
 
 import vapoursynth as vs  # noqa: E402

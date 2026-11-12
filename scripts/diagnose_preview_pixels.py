@@ -38,8 +38,8 @@ with open(NODE_VPY) as f:
 assert SRC, "no source path in composed script"
 print(f"source (verbatim from node script): {SRC}")
 
-# VENDOR R75 module first (dev tree), then helper path.
-_vendor = os.path.join(REPO, "vendor", "vapoursynth", "install-R75",
+# VENDOR (active prefix) module first (dev tree), then helper path.
+_vendor = os.path.join(REPO, "vendor", "vapoursynth", "active",
                        "lib", "python3.14", "site-packages")
 if os.path.isdir(_vendor):
     sys.path.insert(0, _vendor)

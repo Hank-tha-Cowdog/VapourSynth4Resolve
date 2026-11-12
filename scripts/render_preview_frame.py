@@ -166,7 +166,7 @@ def selfcheck():
     """Bounded runtime capability check — the EXACT import contract the
     render path uses (same path resolution, same import), with NO media,
     NO core instantiation and NO plugin loading. Prints one JSON line:
-      {"ok": true,  "version": "R75", "bits": 64, "platform": "..."}
+      {"ok": true,  "version": "R82", "bits": 64, "platform": "..."}
       {"ok": false, "reason": "<classified, sanitized>"}
     Used by the companion to distinguish missing executable / wrong
     architecture / missing module / missing native library — a python that
@@ -229,7 +229,7 @@ def _resolve_runtime_paths():
     for cand in (os.environ.get("VSRES_VS_PYTHON"), staged_vs):
         if cand and os.path.isdir(cand):
             sys.path.insert(0, cand)
-    # Plugin autoload (empirically mapped 2026-10-31, this VS R75 macOS
+    # Plugin autoload (empirically mapped 2026-10-31, this VS macOS
     # build): VAPOURSYNTH_EXTRA_PLUGIN_PATH is the ONLY plugin-loading
     # mechanism — a SINGLE path (os.pathsep-joined lists break loading
     # entirely) and the DEFAULT user-dir autoload DOES NOT EXIST (with

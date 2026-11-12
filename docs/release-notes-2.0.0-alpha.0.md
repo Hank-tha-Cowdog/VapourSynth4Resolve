@@ -89,7 +89,7 @@ keyed-LAN posture, token-log posture (see above).
 ```sh
 # OFX plugin + portable bundle
 scripts/build-vapoursynth.sh              # project-local VapourSynth prefix
-cmake -S . -B build -DVSRES_VS_PREFIX="$PWD/vendor/vapoursynth/install-R75"
+cmake -S . -B build -DVSRES_VS_PREFIX="$PWD/vendor/vapoursynth/install-R82"
 cmake --build build --target vapoursynth_ofx portable_bundle
 
 # Companion app

@@ -30,7 +30,7 @@ complete kit; rows marked **OPEN** are tracked for the next distribution gate.
 
 | Component | License (established) | Duty |
 | --- | --- | --- |
-| VapourSynth R75 core/VSScript + Python package (bundled in OFX bundle) | LGPL-2.1-or-later [read] | Exact source + changes; §6 linking route; notices. **OPEN**: exact shipped-build correspondence |
+| VapourSynth R82 core/VSScript + Python package (bundled in OFX bundle) | LGPL-2.1-or-later [read] | Exact source + changes; §6 linking route; notices. **OPEN**: exact shipped-build correspondence |
 | Embedded CPython 3.14.7 | PSF (+ 90 upstream license files in payload) | Keep upstream license files in the payload |
 | zimg (inside VapourSynth; separate patched zimg in resize2) | permissive/WTFPL evidence; **hold separate identities** | **OPEN**: bind each included source/config + notices |
 | onnxruntime 1.23.2 (+ support dylibs) | MIT core + version-specific third-party notices | **OPEN**: bind origin/build; per-dylib verification before distribution |

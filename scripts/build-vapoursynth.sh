@@ -2,8 +2,8 @@
 # Build VapourSynth from upstream source into a project-local prefix.
 #
 # Usage:   scripts/build-vapoursynth.sh [TAG]
-# Example: scripts/build-vapoursynth.sh R75
-# Default: R75
+# Example: scripts/build-vapoursynth.sh R82
+# Default: R82
 #
 # Output:  vendor/vapoursynth/install-<TAG>/{include,lib,bin}
 #          vendor/vapoursynth/active        symlink -> install-<TAG>
@@ -14,7 +14,7 @@
 
 set -euo pipefail
 
-TAG="${1:-R75}"
+TAG="${1:-R82}"
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 VENDOR="$ROOT/vendor/vapoursynth"
@@ -34,7 +34,7 @@ need_brew_pkg() {
 }
 need_brew_pkg zimg
 
-# VS R75+ requires Python >= 3.12. Auto-pick the newest brewed Python in that range.
+# VS R82 requires Python >= 3.12. Auto-pick the newest brewed Python in that range.
 PYTHON=""
 PYVER=""
 for v in 3.14 3.13 3.12; do
@@ -68,6 +68,16 @@ if [[ ! -d "$SRC/.git" ]]; then
         https://github.com/vapoursynth/vapoursynth.git "$SRC"
 else
     echo "vapoursynth $TAG source already present at $SRC"
+fi
+
+# --- 3b. Portable-build patch: static zimg (2026-11-12) ---------------------
+# R75 carried `dependency('zimg', static: true, ...)`; the R82 tree dropped the
+# static preference, which links Homebrew's libzimg.2.dylib and breaks the
+# portable bundle's self-containment audit. Restore the static link (zimg is
+# permissive/WTFPL; static keeps the shipped bundle self-contained).
+if grep -q "dependency('zimg', version" "$SRC/meson.build"; then
+    sed -i '' "s/dependency('zimg', version/dependency('zimg', static: true, version/" "$SRC/meson.build"
+    echo "patched meson.build: zimg -> static: true"
 fi
 
 # --- 4. Configure ---

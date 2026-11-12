@@ -20,7 +20,7 @@ marked [read]; unresolved questions are explicit and must not be assumed resolve
 - Companion app (renderer+main): **MIT** [read: `companion-app/LICENSE`, added this pass materializing `package.json "license": "MIT"`]. Fork attribution: VapourSage (github.com/Hank-tha-Cowdog/vapoursage). **FINDING [read: GitHub API, 2026-10-28]: the upstream vapoursage repo is PRIVATE and carries NO license file.** A derivative-of-private-unlicensed-code MIT declaration is NOT something this repo can grant itself → **Q1 is now a genuine legal decision for the owner**: obtain an upstream grant from Hank-tha-Cowdog, confirm the retained portions are independently authored/rewritten, or re-license the companion. Evidence complete; decision pending.
 
 ### VapourSynth core runtime (bundled)
-- `libvapoursynth.4.dylib`, `libvsscript.dylib`: **VapourSynth R75**, LGPL-2.1-or-later [read: `vendor/vapoursynth/src-R75/COPYING.LESSER`]. LGPL relocation/source obligations apply to redistribution of these dylibs.
+- `libvapoursynth.4.dylib`, `libvsscript.dylib`: **VapourSynth R82**, LGPL-2.1-or-later [read: `vendor/vapoursynth/src-R82/COPYING.LESSER`]. LGPL relocation/source obligations apply to redistribution of these dylibs.
 - `vapoursynth` Python package + `.abi3.so`: LGPL, same source.
 - zimg (inside resize): license **not yet read at the bundled version** → unresolved Q2.
 
