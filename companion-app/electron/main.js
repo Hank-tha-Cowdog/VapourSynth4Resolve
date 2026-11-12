@@ -18,6 +18,7 @@ const { registerModelManager } = require('./model-manager');
 const { capabilitySnapshot } = require('./neural-capability');
 const { registerRecipeHandlers } = require('./recipes');
 const { editorConfigurationSnapshot, registerEditorConfigurationBridge, isManualHostConfig, describeManualHostConfigProblem } = require('./editor-configuration');
+const nodeRecords = require('./node-records');
 
 // --- RUNTIME ARCHITECTURE (M1 OPTIMIZED) ---
 // `isDev` controls Python runtime path lookups (inherited from vapoursage).
@@ -154,6 +155,37 @@ if (manualHostApply && resultPath) {
   }
 }
 
+// Per-node chain continuity (beta-chains, 2026-11-12): when this editor was
+// launched from Configure and the host-supplied chain is EMPTY, look for this
+// node's saved record (the native plugin's nodes/<guid>.json store) and
+// restore it — clip-verified, approval-verified, fail-closed (node-records.js).
+// A record for a DIFFERENT clip surfaces a note instead of being restored.
+let nodeRestoreNote = '';
+{
+  const cfg = latestConfig ?? initialConfig;
+  const guid = cfg && typeof cfg === 'object' ? cfg.nodeGuid : null;
+  if (manualHostApply && nodeRecords.isValidNodeGuid(guid)) {
+    try {
+      const plan = nodeRecords.planRestore({
+        recordResult: nodeRecords.readNodeRecord(guid),
+        currentConfig: cfg, mode: 'auto',
+      });
+      if (plan.action === 'restore') {
+        const merged = nodeRecords.applyRestoreToConfig(cfg, plan);
+        if (merged !== cfg) {
+          latestConfig = merged;
+          if (initialConfig === cfg) initialConfig = merged;
+          console.log('[vsres] node record auto-restore: ' + plan.chain.length + ' step(s), clip ' + plan.clip);
+        }
+      }
+      if (plan.note) nodeRestoreNote = plan.note;
+    } catch (e) {
+      console.warn('[vsres] node record check failed:', e?.message || String(e));
+    }
+  }
+}
+if (nodeRestoreNote) recoveryNote = recoveryNote ? recoveryNote + ' ' + nodeRestoreNote : nodeRestoreNote;
+
 // Preview round-trip: we write a request JSON to previewRequestPath; the OFX plugin's
 // PreviewService renders the chain and writes a PNG to previewResponsePath. We watch
 // that path for changes and stream each new render to the renderer.
@@ -185,6 +217,7 @@ let statusPath = null;
 const { resolveRuntimes, helperScript } = require('./prod-paths');
 const { resolveInstallHelper, buildArgs, runInstaller } = require('./plugin-install');
 const { disposeAllWorkers } = require('./preview-worker');
+const { createRenderQueue } = require('./render-queue');
 const RUNTIMES = resolveRuntimes({
   resourcesPath: isDev ? path.join(__dirname, '../runtime') : process.resourcesPath,
 });
@@ -197,6 +230,37 @@ const PATHS = {
   ffprobe: RUNTIMES.ffprobe.path,
   vsPluginPath: RUNTIMES.vsPluginPath.path,
 };
+
+// ---- Render queue (beta-batch, 2026-11-12) ---------------------------------
+// Sequential render jobs executed on the BUNDLED runtimes, no Resolve
+// involved: the bundled CPython runs scripts/render_chain_runner.py on the
+// vapoursynth module's native output() writer (any format — RGB/YUV/Gray,
+// any depth, alpha) piped as RAWVIDEO into ffmpeg with the chain's H.273
+// color tags carried through. A job renders the node's own composed script
+// (nodes/<guid>.vpy, the plugin's canonical output) or a user-picked .vpy —
+// the queue never recomposes; what was reviewed and approved is what renders.
+// (The vspipe-CLI XDG TOML machinery lives on in vs-runtime-config.js for
+// stand-alone vspipe excursions; the module route needs none of it.)
+const RENDER_QUEUE_FILE = path.join(os.homedir(),
+  'Library/Application Support/VapourSynth-OFX', 'render-queue.json');
+function renderQueueRuntimes() {
+  const ffmpeg = [RUNTIMES.ffmpeg,
+    { path: '/opt/homebrew/bin/ffmpeg', exists: fs.existsSync('/opt/homebrew/bin/ffmpeg') },
+    { path: '/usr/local/bin/ffmpeg', exists: fs.existsSync('/usr/local/bin/ffmpeg') }]
+    .find(c => c && c.exists && c.path);
+  return {
+    python: RUNTIMES.python && RUNTIMES.python.exists ? RUNTIMES.python.path : null,
+    runner: helperScript('render_chain_runner.py'),
+    ffmpeg: ffmpeg ? ffmpeg.path : null,
+    pluginPath: PATHS.vsPluginPath,
+  };
+}
+const renderQueue = createRenderQueue({
+  spawnImpl: spawn,
+  resolveRuntimes: renderQueueRuntimes,
+  jobsFile: RENDER_QUEUE_FILE,
+  emit: (event) => { try { editorWindow?.webContents?.send('render-queue:event', event); } catch { /* window gone */ } },
+});
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -968,6 +1032,64 @@ app.whenReady().then(() => {
       if (!fs.existsSync(composed)) return '';
       return fs.readFileSync(composed, 'utf8');
     } catch { return ''; }
+  });
+
+  // ---- Render queue IPC (beta-batch) — trust-gated like every execution channel ----
+  ipcMain.handle('render-queue:add', async (event, request) => {
+    if (!isTrustedSender(event)) return { ok: false, error: 'Untrusted sender: the render queue serves only its own editor window.' };
+    const req = { ...request };
+    if (!req.scriptPath && typeof req.nodeGuid === 'string') {
+      if (!nodeRecords.isValidNodeGuid(req.nodeGuid)) return { ok: false, error: 'invalid node guid' };
+      req.scriptPath = path.join(os.homedir(), 'Library/Application Support/VapourSynth-OFX',
+        'nodes', req.nodeGuid + '.vpy');
+      if (!fs.existsSync(req.scriptPath)) {
+        return { ok: false, error: 'this node has no composed script yet — apply its chain in Resolve first' };
+      }
+    }
+    return renderQueue.add(req);
+  });
+  ipcMain.handle('render-queue:list', (event) => isTrustedSender(event)
+    ? { ok: true, jobs: renderQueue.list(), encoders: renderQueue.encoders() }
+    : { ok: false, error: 'Untrusted sender.' });
+  ipcMain.handle('render-queue:cancel', (event, request) => isTrustedSender(event)
+    ? renderQueue.cancel(request?.id) : { ok: false, error: 'Untrusted sender.' });
+  ipcMain.handle('render-queue:remove', (event, request) => isTrustedSender(event)
+    ? renderQueue.remove(request?.id) : { ok: false, error: 'Untrusted sender.' });
+  ipcMain.handle('render-queue:clear', (event) => isTrustedSender(event)
+    ? renderQueue.clearFinished() : { ok: false, error: 'Untrusted sender.' });
+  ipcMain.handle('render-queue:choose-output', async (event, request) => {
+    if (!isTrustedSender(event)) return { ok: false, error: 'Untrusted sender.' };
+    const enc = renderQueue.encoders()[request?.encoder] || renderQueue.encoders().prores;
+    const res = await dialog.showSaveDialog(editorWindow, {
+      defaultPath: typeof request?.defaultPath === 'string' ? request.defaultPath : undefined,
+      filters: [{ name: enc.label, extensions: [enc.extension.slice(1)] }],
+    });
+    return res.canceled || !res.filePath ? { ok: false, cancelled: true } : { ok: true, path: res.filePath };
+  });
+
+  // Explicit saved-chain load for this node (beta-chains, 2026-11-12). The
+  // boot path auto-restores only into an EMPTY chain; this is the deliberate
+  // user-driven path (e.g. after a stale-clip note). Cross-clip loads have
+  // approvals stripped by node-records.js — nothing arrives pre-approved.
+  ipcMain.handle('node-records:load', async (event, request) => {
+    if (!isTrustedSender(event)) {
+      return { ok: false, error: 'Untrusted sender: saved-chain records are available only to their own editor window.' };
+    }
+    try {
+      const recordResult = nodeRecords.readNodeRecord(request?.guid);
+      if (!recordResult.ok) return { ok: false, error: recordResult.error };
+      const plan = nodeRecords.planRestore({
+        recordResult, currentConfig: latestConfig ?? initialConfig, mode: 'explicit',
+      });
+      if (plan.action !== 'restore') {
+        return { ok: false, error: plan.note || 'no usable saved chain for this node' };
+      }
+      return { ok: true, chain: plan.chain, colorManagement: plan.colorManagement ?? null,
+        mix: plan.mix ?? null, manualOrder: plan.manualOrder ?? null,
+        clip: plan.clip, note: plan.note, problems: plan.problems || [] };
+    } catch (e) {
+      return { ok: false, error: e?.message || String(e) };
+    }
   });
 
   // ---- Post-edit render verification (the self-healing signal) ----

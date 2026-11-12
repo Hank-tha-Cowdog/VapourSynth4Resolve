@@ -225,6 +225,40 @@ std::string serialize_chain(const Chain& chain) {
     return config::serialize_compact(j);
 }
 
+// WINDOW RULE (2026-11-12, beta-perf window-edge quality): the source
+// window (ActiveTrimmed) is applied to the chain's OUTPUT, not its input, so
+// temporal filters (QTGMC and friends) keep full source context at the clip's
+// head/tail instead of starting from a hard cut. Only RATE-PRESERVING chains
+// may reorder — a step that changes cadence would move the window's frame
+// indices. Detection mirrors current_radius's conservative substring
+// convention for script steps; the qtgmc step is rate-preserving at its
+// default fpsDivisor=2 (1 = double rate).
+static bool rate_preserving_chain(const Chain& chain) {
+    for (const auto& step : chain.steps) {
+        if (!step.enabled) continue;
+        if (step.type == "qtgmc") {
+            int divisor = 2;
+            try {
+                auto pj = config::parse(step.params_json);
+                if (pj.contains("fpsDivisor") && pj.at("fpsDivisor").is_number_integer())
+                    divisor = pj.at("fpsDivisor").get<int>();
+            } catch (...) { /* keep the default */ }
+            if (divisor == 1) return false;
+        } else if (step.type == "script") {
+            try {
+                auto pj = config::parse(step.params_json);
+                const std::string code = pj.value("code", std::string());
+                for (const char* needle : {"BlockFPS", "AssumeFPS", "ChangeFPS",
+                                           "ConvertFPS", "InterFrame", "FlowFPS",
+                                           "FrameRate", "Interpolate", "RIFE", "Rife"}) {
+                    if (code.find(needle) != std::string::npos) return false;
+                }
+            } catch (...) { /* unknown params parse as preserving, like the default */ }
+        }
+    }
+    return true;
+}
+
 std::string compose_script(const Chain& chain, const StepContext& ctx, ComposeStats* stats) {
     if (stats) *stats = ComposeStats{};
     if (stats) stats->total = static_cast<int>(chain.steps.size());
@@ -344,6 +378,10 @@ std::string compose_script(const Chain& chain, const StepContext& ctx, ComposeSt
     // script is visually organized and the Script view can tie code to chain
     // stages: ── SOURCE ── / ── INPUT ── / ── STEP n: <label> ── / ── OUTPUT ──.
     // Comments only — formatting never changes execution.
+    // Window rule: only a rate-preserving ActiveTrimmed chain may apply the
+    // trim to the output (see rate_preserving_chain).
+    const bool trim_window_after =
+        chain.source_mode.mode == SourceMode::ActiveTrimmed && rate_preserving_chain(chain);
     py << "# ══════════ SOURCE ══════════\n";
     // TKT-SRC: branch the source binding. In timeline mode (Disabled fallback)
     // we use the OFX-registered `source` filter as before — VS pulls already-
@@ -375,9 +413,21 @@ std::string compose_script(const Chain& chain, const StepContext& ctx, ComposeSt
             py << py_bytes_path_stmt("_vsres_src_path",
                                      chain.source_mode.source_file_path);
             py << "src = core.lsmas.LWLibavSource(_vsres_src_path)\n";
-            py << "src = core.std.Trim(src, first="
-               << chain.source_mode.source_in_point << ", last="
-               << chain.source_mode.source_out_point << ")\n";
+            if (trim_window_after) {
+                // WINDOW RULE: the window is a sibling variable; the chain
+                // runs on the FULL source so QTGMC keeps context at the clip's
+                // head/tail, and the window is applied to the chain output
+                // before the mix/OUTPUT sections (rate-preserving chains).
+                py << "src_window = core.std.Trim(src, first="
+                   << chain.source_mode.source_in_point << ", last="
+                   << chain.source_mode.source_out_point << ")\n";
+            } else {
+                // Legacy order for rate-changing chains: trim FIRST so the
+                // recorded source coordinates stay frame-accurate.
+                py << "src = core.std.Trim(src, first="
+                   << chain.source_mode.source_in_point << ", last="
+                   << chain.source_mode.source_out_point << ")\n";
+            }
             break;
         }
         case SourceMode::Disabled:
@@ -417,11 +467,18 @@ std::string compose_script(const Chain& chain, const StepContext& ctx, ComposeSt
         py << frag.body;
     }
 
+    if (trim_window_after) {
+        py << "\n# ══════════ WINDOW ══════════\n";
+        py << "clip = core.std.Trim(clip, first="
+           << chain.source_mode.source_in_point << ", last="
+           << chain.source_mode.source_out_point << ")\n";
+    }
+
     py << "\n# ══════════ OUTPUT ══════════\n";
     if (chain.mix < 1.0f) {
         // Mix happens in whatever color space `clip` ended up in. Convert
         // `src` to match so std.Merge doesn't fail on format mismatch.
-        py << "_mix_ref = src\n";
+        py << (trim_window_after ? "_mix_ref = src_window\n" : "_mix_ref = src\n");
         py << "if clip.format.id != _mix_ref.format.id:\n";
         py << "    _mix_ref = core.resize.Bicubic(src, format=clip.format.id, matrix_s='709')\n";
         py << "clip = core.std.Merge(_mix_ref, clip, weight=" << chain.mix << ")\n";

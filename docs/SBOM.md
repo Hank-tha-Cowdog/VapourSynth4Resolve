@@ -95,7 +95,7 @@ existing installs / vendor tree):
   license unverified → remains open (not bundled in the DMG).
 
 ### Optional / not-bundled (SBOM lines so the reviewers know they are NOT in the payload)
-- **FFmpeg CLI (`ffmpeg`)**: the dev machine build is GPL-v3/x264/x265 and is not redistributed in the existing DMG. It is not the source of the separate official-source ffprobe candidate below. Copying the dev build would require its own configuration/license/dependency review.
+- **FFmpeg CLI (`ffmpeg`)**: the dev machine build is GPL-v3/x264/x265 and is NEVER redistributed. The shipped encoder helper is a separate LGPL-only build from the same pinned official source as the ffprobe candidate (see the encoder candidate section below); the render queue prefers it over any system ffmpeg.
 - **vs-mlrt + ONNX Runtime** (RIFE): optional, user-initiated download (sha256-verified from upstream releases). **vs-mlrt is GPL-3.0 (verified 2026-10-31; previously assumed MIT — corrected above); onnxruntime is MIT.** Model weights remain under unestablished upstream terms.
 - **RIFE weights**: optional download; upstream model terms.
 - Companion npm deps (Electron/React/CodeMirror/keytar/lucide/electron-builder): aggregated licenses in `node_modules`; **formal third-party notice assembly pending** → unresolved Q6. Electron itself aggregates Chromium + Node.js licensing obligations.
@@ -187,3 +187,32 @@ detection, the packaged app, all media formats, macOS 13 execution or a clean
 Mac. The complete app's existing measured CPython floor of macOS 26 remains
 unchanged and is not newly accepted as release policy. Existing installed,
 staged, rollback and DMG identities and every other release gate are preserved.
+
+
+## November 12 ffmpeg ENCODER candidate — render-queue runtime
+
+| Item | Candidate evidence |
+| --- | --- |
+| Component | ffmpeg from official FFmpeg 9.0.2 source; **LGPL-only encoder build** (prores_ks + ffv1 encoders; mov + matroska muxers; avfilter/swscale enabled for format conversion) |
+| Purpose | encodes the render queue's rawvideo pipe to ProRes 422 HQ / FFV1 masters; preferred over any system ffmpeg |
+| Source | `https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz` with detached signature (same pinned archive as the ffprobe candidate) |
+| Archive SHA-256 | `8c3850283eb25fa026482078a04051e0be17347b09ef81a0849bec15a96e002e` |
+| Release-key fingerprint | `FCF986EA15E6E293A5644F10B4322F04D67658D8` |
+| Helper SHA-256 | `ec562439dcc31a03374a08128d4633217d56d72de1da49c0e8790a991e464f2c` |
+| Manifest SHA-256 | `9ba26e3b08835d50a16973302f3c7e6453bcc7c9d9882bfac7ce91118b9838e0` |
+| Build | arm64; static; GPL/nonfree/version3/autodetection/network disabled (configure-verified: configure prints "License: LGPL version 2.1 or later"); no external codec libraries; ffprobe/ffplay disabled |
+| Measured helper minimum | macOS 13.0 load command; exercised on the current Mac |
+| Dynamic loads | Apple CoreFoundation, CoreMedia, CoreVideo and libSystem only |
+| Candidate Resources | `runtime/ffmpeg/ffmpeg` and `licenses/ffmpeg-encoder/manifest.json` / `materials/` |
+| Retained materials | Full source archive/signature/public key, signature-verification receipt, LICENSE.md, COPYING.LGPLv2.1, build invocation and actual config.mak/config.log |
+| Recipient route | `licenses/ffmpeg-encoder/recipient/rebuild_ffmpeg_encoder.py` + `docs/ffmpeg-encoder-recipient-build-draft.md` |
+
+Verification on 2026-11-12: the staged encoder produced a ProRes 422 HQ file
+(1920×1080, 10-bit 4:2:2, 23.976 fps) from the live Resolve-session chain,
+byte-identical in size to a reference render made with the dev machine's
+Homebrew ffmpeg. As with the ffprobe candidate, this describes the
+configuration; source/relink/notice, patent and final distribution review
+remain open and retaining the archive alone does not close those gates. The
+staging gate (`scripts/stage_ffmpeg_encoder.py`) fails closed on any
+configure that carries the probe build's feature disables or relaxes the
+license restrictions.

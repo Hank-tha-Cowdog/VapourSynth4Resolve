@@ -187,8 +187,8 @@ fn read_version(bundle: &Path) -> Option<String> {
 fn resolve_running() -> bool {
     Command::new("/usr/bin/pgrep")
         .args(["-x", "Resolve"])
-        .status()
-        .map(|s| s.success())
+        .output() // capture: a bare .status() leaks pgrep's PID onto our stdout
+        .map(|o| o.status.success())
         .unwrap_or(false)
 }
 

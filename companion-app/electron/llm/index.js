@@ -90,9 +90,12 @@ async function streamChat({ modelId, messages, system, tools, executeAgentTool, 
         messages, system, tools: effectiveTools, executeAgentTool, apiKey, callbacks: fwd,
       });
     case 'openai':
+      // Tool parity (beta-provider): OpenAI-compatible backends run the same
+      // agentic loop as Anthropic — tools + executor are forwarded.
       return openai.streamChat({
         modelId: parsed.apiModelId,
-        messages, system, apiKey, baseURL: endpoint, callbacks: fwd,
+        messages, system, tools: effectiveTools, executeAgentTool,
+        apiKey, baseURL: endpoint, callbacks: fwd,
       });
     case 'google':
       return google.streamChat({
@@ -102,7 +105,8 @@ async function streamChat({ modelId, messages, system, tools, executeAgentTool, 
     case 'ollama':
       return ollama.streamChat({
         modelId: parsed.apiModelId,
-        messages, system, baseURL: endpoint, callbacks: fwd,
+        messages, system, tools: effectiveTools, executeAgentTool,
+        baseURL: endpoint, callbacks: fwd,
       });
     default:
       callbacks.onError(`Provider type "${cfg.type}" not implemented yet`);

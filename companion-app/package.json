@@ -1,6 +1,6 @@
 {
   "name": "vapoursynth-companion",
-  "version": "2.0.0-alpha.0",
+  "version": "2.0.0-beta.1",
   "description": "Popout companion window for the VapourSynth OFX plugin in DaVinci Resolve. Forked from VapourSage (https://github.com/Hank-tha-Cowdog/vapoursage).",
   "main": "electron/main.js",
   "scripts": {
@@ -104,11 +104,11 @@
         ]
       },
       {
-       "from": "resources/bin",
-       "to": "bin",
-       "filter": [
-        "vsres-install"
-       ]
+        "from": "resources/bin",
+        "to": "bin",
+        "filter": [
+          "vsres-install"
+        ]
       },
       {
         "from": "../build-portable/portable/VapourSynth.ofx.bundle",
@@ -127,7 +127,8 @@
           "install_ofx_toml.py",
           "probe_vs_plugins.py",
           "probe_rife.py",
-          "resolve-query.py"
+          "resolve-query.py",
+          "render_chain_runner.py"
         ]
       },
       {
@@ -171,6 +172,35 @@
         "to": "licenses/ffmpeg/recipient",
         "filter": [
           "ffprobe-recipient-build-draft.md"
+        ]
+      },
+      {
+        "from": "../build-ffmpeg-encoder/payload/runtime/ffmpeg",
+        "to": "runtime/ffmpeg",
+        "filter": [
+          "ffmpeg"
+        ]
+      },
+      {
+        "from": "../build-ffmpeg-encoder/payload/licenses/ffmpeg-encoder",
+        "to": "licenses/ffmpeg-encoder",
+        "filter": [
+          "manifest.json",
+          "materials/**/*"
+        ]
+      },
+      {
+        "from": "../scripts",
+        "to": "licenses/ffmpeg-encoder/recipient",
+        "filter": [
+          "rebuild_ffmpeg_encoder.py"
+        ]
+      },
+      {
+        "from": "../docs",
+        "to": "licenses/ffmpeg-encoder/recipient",
+        "filter": [
+          "ffmpeg-encoder-recipient-build-draft.md"
         ]
       }
     ],

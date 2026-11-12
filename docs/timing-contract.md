@@ -93,3 +93,32 @@ choice. The plugin never changes the Resolve timeline implicitly.
   detail.
 - NOT yet live-verified: the reverted composer inside Resolve (bundle swap
   staged), A/B gestures in the launched companion at matched moments.
+
+## Window rule — source windows apply to the chain OUTPUT (2026-11-12)
+
+`ActiveTrimmed` composes the clip's source window (`sourceInPoint..sourceOutPoint`)
+AFTER the chain for rate-preserving chains: the chain runs on the FULL source
+(`src_window` is a sibling variable used only by the mix stage), so temporal
+filters — QTGMC above all — keep real source context at the clip's head/tail
+instead of deinterlacing from a hard cut. Frame mapping is unchanged: for a
+rate-preserving chain, output frame k still equals source frame `in+k`.
+
+Rate-changing steps keep the legacy order (window on the INPUT): the recorded
+source coordinates only map 1:1 onto output frames at a preserved cadence.
+Detection mirrors the native `rate_preserving_chain` (and its TypeScript
+mirror in `draft-composer.ts`): `qtgmc` with `fpsDivisor == 1` is
+rate-changing; a `script` step whose code references BlockFPS/AssumeFPS/
+ChangeFPS/ConvertFPS/InterFrame/FlowFPS/FrameRate/Interpolate/RIFE is treated
+as rate-changing by conservative substring (the same convention
+`current_radius` uses).
+
+Both composers emit the rule (native `compose_script` + draft composer), with
+native coverage in `tests/unit/test_chain_compose.cpp`
+(`active_trimmed_emits_trim`, `active_trimmed_rate_changing_keeps_trim_first`).
+
+Empirical check (2026-11-12, moving 60-frame source, window 12..35, a
+deterministic temporal filter): trim-first output differs from window-after
+output ONLY at the window edges (first 3 and last 3 frames; RMSE up to ~0.05)
+and is bit-identical for every interior frame — the rule restores real source
+context at the clip's head/tail and changes nothing where context was already
+complete.

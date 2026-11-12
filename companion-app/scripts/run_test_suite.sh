@@ -7,6 +7,18 @@
 set -u
 cd "$(dirname "$0")/.."
 NODE_BIN="${NODE:-node}"
+# asdf shims resolve their installs via $HOME/.asdf and fail SILENTLY with
+# exit 126 when this script runs under an isolated HOME (test isolation) —
+# every suite then "fails" with zero output. Prefer a real interpreter when
+# PATH points at a shim. (CI: node comes from setup-node, not a shim — the
+# resolved path is untouched there.)
+case "$(command -v "$NODE_BIN" 2>/dev/null || true)" in
+    */.asdf/shims/node)
+        for candidate in /opt/homebrew/bin/node /usr/local/bin/node; do
+            if [ -x "$candidate" ]; then NODE_BIN="$candidate"; break; fi
+        done
+        ;;
+esac
 export VSRES_DISABLE_RESOLVE_DISCOVERY=1
 export PYTHONDONTWRITEBYTECODE=1
 export NODE_OPTIONS="${NODE_OPTIONS:-}"

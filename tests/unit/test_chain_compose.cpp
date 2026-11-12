@@ -507,13 +507,26 @@ int test_active_trimmed_emits_trim() {
     c.steps.push_back(bound_step("a", "script", 20, true, R"({"code":"# pass"})"));
     vsres::StepContext ctx{1920, 1080, 260, 3};
     std::string script = vsres::compose_script(c, ctx);
-    const std::string trim = "core.std.Trim(src, first=100, last=359)";
-    if (script.find(trim) == std::string::npos) {
+    // WINDOW RULE (2026-11-12, beta-perf): a rate-preserving chain windows
+    // its OUTPUT — the chain runs on the full source so temporal filters keep
+    // context at the clip's head/tail (the recorded source window becomes a
+    // sibling variable; the step bodies see the untrimmed source).
+    const std::string window = "src_window = core.std.Trim(src, first=100, last=359)";
+    if (script.find(window) == std::string::npos) {
         std::string got = script.substr(script.find("std.Trim") != std::string::npos
-            ? script.find("std.Trim") - 4 : 0, 48);
-        std::fprintf(stderr, "  emitted: %.48s\n", got.c_str());
-        return fail("ActiveTrimmed did not emit the recorded trim window");
+            ? script.find("std.Trim") - 12 : 0, 60);
+        std::fprintf(stderr, "  emitted: %.60s\n", got.c_str());
+        return fail("ActiveTrimmed did not emit src_window (window rule)");
     }
+    const std::string clip_trim = "clip = core.std.Trim(clip, first=100, last=359)";
+    const auto wt = script.find(clip_trim);
+    if (wt == std::string::npos)
+        return fail("ActiveTrimmed did not re-window the chain OUTPUT");
+    const auto step_at = script.find("# ══════════ STEP 1");
+    if (step_at == std::string::npos || wt < step_at)
+        return fail("the output window must come AFTER the chain steps");
+    if (script.find("src = core.std.Trim(src, first=100, last=359)") != std::string::npos)
+        return fail("rate-preserving chain must not trim the chain INPUT");
     if (script.find("LWLibavSource(_vsres_src_path)") == std::string::npos)
         return fail("ActiveTrimmed did not direct-load the source via the hex-decoded path");
     // SECURITY (2026-11-05, security review #1/correctness review C11): the path must be hex-
@@ -618,6 +631,28 @@ int test_vsmlrt_guarded_import_in_preamble() {
         return fail("guarded vsmlrt import missing (correctness review C08)");
     if (script.find("except Exception:") == std::string::npos)
         return fail("vsmlrt import failure must be contained");
+    return 0;
+}
+
+int test_active_trimmed_rate_changing_keeps_trim_first() {
+    vsres::register_builtin_filters();
+    vsres::Chain c;
+    c.source_mode.mode = vsres::SourceMode::ActiveTrimmed;
+    c.source_mode.source_file_path = "/synthetic/source.mov";
+    c.source_mode.source_in_point = 100;
+    c.source_mode.source_out_point = 359;
+    // fpsDivisor=1 = double rate → rate-CHANGING → legacy trim-first order
+    // (a re-windowed output would move the recorded source indices).
+    c.steps.push_back(bound_step("q", "qtgmc", 20, true,
+        R"({"preset":"Slower","tff":true,"fpsDivisor":1})"));
+    vsres::StepContext ctx{1920, 1080, 260, 3};
+    const std::string script = vsres::compose_script(c, ctx);
+    if (script.find("src = core.std.Trim(src, first=100, last=359)") == std::string::npos)
+        return fail("rate-changing chain must keep the trim on the INPUT");
+    if (script.find("clip = core.std.Trim(clip,") != std::string::npos)
+        return fail("rate-changing chain must not re-window the OUTPUT");
+    if (script.find("src_window") != std::string::npos)
+        return fail("rate-changing chain must not emit src_window");
     return 0;
 }
 
@@ -912,6 +947,7 @@ int main() {
         {"source_mode_sentinel_defaults", test_source_mode_sentinel_defaults},
         {"source_fingerprint_and_trim_parse", test_source_fingerprint_and_trim_parse},
         {"active_trimmed_emits_trim", test_active_trimmed_emits_trim},
+        {"active_trimmed_rate_changing_keeps_trim_first", test_active_trimmed_rate_changing_keeps_trim_first},
         {"node_guid_roundtrip", test_node_guid_roundtrip},
         {"node_guid_validation_rejects_paths", test_node_guid_validation_rejects_paths},
     };

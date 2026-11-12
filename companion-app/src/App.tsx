@@ -17,6 +17,7 @@ import { ClipInfoBar } from './components/ClipInfoBar';
 import { PluginStatusBanner } from './components/PluginStatusBanner';
 import { ConfigWriteStatus } from './components/ConfigWriteStatus';
 import { EditorStartupStatus } from './components/EditorStartupStatus';
+import { RenderQueueBar } from './components/RenderQueueBar';
 import { createEditorBootstrap, INITIAL_EDITOR_STARTUP } from './services/editor-bootstrap';
 import { createConfigWriteFeedbackObserver, INITIAL_CONFIG_WRITE_FEEDBACK, requestConfigWrite } from './services/config-write-feedback';
 import { PreviewPanel } from './components/PreviewPanel';
@@ -1043,6 +1044,10 @@ export default function App() {
                                     disabled: config.chain.filter(s => !s.enabled).length,
                                     chatMessages: config.archivist.messages.length,
                                 }}
+                            />
+                            <RenderQueueBar
+                                nodeGuid={config.nodeGuid}
+                                clipName={config.clipMetadata?.source?.fileName}
                             />
                             {activeTab === 'chain' && <>
                                 <RecipeMenu

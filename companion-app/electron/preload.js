@@ -37,6 +37,20 @@ contextBridge.exposeInMainWorld('electron', {
   readPreviewImage: () => ipcRenderer.invoke('read-preview-image'),
   applyConfig: (config, options) => ipcRenderer.invoke('apply-config', config, options),
   getClipMetadata: () => ipcRenderer.invoke('get-clip-metadata'),
+  loadNodeRecord: (guid) => ipcRenderer.invoke('node-records:load', { guid }),
+
+  // ----- Render queue (beta-batch): vspipe|ffmpeg jobs on the bundled runtimes -----
+  renderQueueAdd: (request) => ipcRenderer.invoke('render-queue:add', request),
+  renderQueueList: () => ipcRenderer.invoke('render-queue:list'),
+  renderQueueCancel: (id) => ipcRenderer.invoke('render-queue:cancel', { id }),
+  renderQueueRemove: (id) => ipcRenderer.invoke('render-queue:remove', { id }),
+  renderQueueClear: () => ipcRenderer.invoke('render-queue:clear'),
+  renderQueueChooseOutput: (request) => ipcRenderer.invoke('render-queue:choose-output', request),
+  onRenderQueueEvent: (cb) => {
+    const sub = (_event, data) => cb(data);
+    ipcRenderer.on('render-queue:event', sub);
+    return () => ipcRenderer.removeListener('render-queue:event', sub);
+  },
 
   // ----- Archivist streaming bridge (Anthropic for now; multi-vendor in TKT-A5) -----
   sendArchivistMessage: (payload) => ipcRenderer.invoke('archivist:send', payload),

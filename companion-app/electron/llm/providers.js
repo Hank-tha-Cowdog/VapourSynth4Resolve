@@ -24,7 +24,7 @@ module.exports = {
     needsApiKey: true,
     keychainAccount: 'openai',
     defaultEndpoint: 'https://api.openai.com/v1',
-    supportsTools: false,  // tool-calling exists but uses a different schema — TKT-A4 follow-up
+    supportsTools: true,   // beta-provider: full agentic loop (tools translated to the function schema)
     models: [
       { id: 'gpt-5.6-sol',   name: 'GPT-5.6 Sol (flagship)' },
       { id: 'gpt-5.6-terra', name: 'GPT-5.6 Terra (balanced)' },
@@ -49,7 +49,7 @@ module.exports = {
     needsApiKey: true,
     keychainAccount: 'openrouter',
     defaultEndpoint: 'https://openrouter.ai/api/v1',
-    supportsTools: false,
+    supportsTools: true,   // via the OpenAI-compatible tool loop
     models: [
       { id: 'openai/gpt-5.6-sol',                name: 'OpenRouter · GPT-5.6 Sol' },
       { id: 'anthropic/claude-sonnet-5',         name: 'OpenRouter · Claude Sonnet 5' },
@@ -63,7 +63,7 @@ module.exports = {
     needsApiKey: true,
     keychainAccount: 'xai',
     defaultEndpoint: 'https://api.x.ai/v1',
-    supportsTools: false,
+    supportsTools: true,   // via the OpenAI-compatible tool loop
     models: [
       { id: 'grok-4.5', name: 'Grok 4.5' },
       { id: 'grok-4.3', name: 'Grok 4.3 (1M context)' },
@@ -75,7 +75,7 @@ module.exports = {
     needsApiKey: false,
     keychainAccount: null,
     defaultEndpoint: 'http://localhost:1234/v1',
-    supportsTools: false,
+    supportsTools: false,  // model-dependent locally; enable per-model when verified
     models: [
       { id: 'local-model', name: 'LM Studio · local-model (example)' },
     ],
@@ -86,7 +86,7 @@ module.exports = {
     needsApiKey: false,
     keychainAccount: null,
     defaultEndpoint: 'http://localhost:11434',
-    supportsTools: false,
+    supportsTools: true,   // via the Ollama tool loop (models without tool support simply never call tools)
     models: [
       { id: 'llama3.3', name: 'Ollama · llama3.3 (example)' },
       { id: 'mistral',  name: 'Ollama · mistral (example)' },

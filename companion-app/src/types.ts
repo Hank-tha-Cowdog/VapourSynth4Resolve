@@ -434,6 +434,18 @@ declare global {
                 isInterlaced: boolean; colorSpace: string;
             }>;
 
+            // Render queue (beta-batch): sequential renders of composed chains
+            // on the bundled runtimes. Trust-gated to this window in main.js.
+            renderQueueAdd?: (request: { nodeGuid?: string; scriptPath?: string; outputPath: string; encoder?: string; overwrite?: boolean; label?: string })
+                => Promise<{ ok: boolean; id?: string; error?: string }>;
+            renderQueueList?: () => Promise<{ ok: boolean; jobs?: RenderQueueJob[]; encoders?: Record<string, { label: string; extension: string }>; error?: string }>;
+            renderQueueCancel?: (id: string) => Promise<{ ok: boolean; cancelling?: boolean; error?: string }>;
+            renderQueueRemove?: (id: string) => Promise<{ ok: boolean; error?: string }>;
+            renderQueueClear?: () => Promise<{ ok: boolean; removed?: number; error?: string }>;
+            renderQueueChooseOutput?: (request: { encoder?: string; defaultPath?: string })
+                => Promise<{ ok: boolean; path?: string; cancelled?: boolean; error?: string }>;
+            onRenderQueueEvent?: (cb: (event: unknown) => void) => (() => void) | undefined;
+
             // Multi-vendor Settings IPC (TKT-A5)
             listProviders?: () => Promise<Record<string, ProviderCatalogEntry>>;
             hasApiKey?: (providerId: string)
@@ -658,4 +670,15 @@ declare global {
             deleteRecipe?: (request: { slug: string }) => Promise<{ ok: boolean; error?: string }>;
         };
     }
+}
+
+export interface RenderQueueJob {
+    id: string;
+    state: string;
+    encoder: string;
+    outputPath: string;
+    label?: string;
+    progress?: { frame: number; total: number; percent: number } | null;
+    error?: string | null;
+    bytes?: number;
 }

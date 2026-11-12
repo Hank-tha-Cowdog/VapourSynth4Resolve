@@ -8,7 +8,7 @@
 # rejects absent required loader-relative targets; contextual tokens remain
 # explicitly unqualified and this is not a runtime/ABI closure certificate.
 #
-# Usage: repair_portable_bundle.sh <bundle-contents-dir> <plugin-list-file> <vendor-plugin-dir>
+# Usage: repair_portable_bundle.sh <bundle-contents-dir> <plugin-list-file> <vendor-plugin-dir> [vs-site-packages-dir]
 #        repair_portable_bundle.sh --audit-only <bundle-contents-dir>
 # --audit-only runs JUST the fail-closed sweep (no mutation) — used by
 # tests/test_bundle_selfcontained.sh to verify the FINAL staged artifact.
@@ -24,6 +24,7 @@ fi
 CONTENTS="$1"
 PLUGIN_LIST="${2:-}"
 VENDOR_LIBS="${3:-}"
+VS_SP="${4:-}"
 
 if [ "$AUDIT_ONLY" -eq 1 ]; then
     # Audit every Mach-O by magic; no payload/tool launch or mutation.
@@ -35,6 +36,17 @@ PLUGINS="$CONTENTS/Plugins"
 FRW="$CONTENTS/Frameworks/Python.framework/Versions"
 
 log() { printf '  repair: %s\n' "$*"; }
+
+# ── 0. R82+ standard-filters library (conditional) ──────────────────────────
+# R80+ split the standard filters out of the core into libvapoursynthfilters,
+# which the core dlopens from its own directory; R79 and older cores do not
+# ship it. Stage it next to the core only when the active prefix has it, and
+# give it a bundle-relative identity (it links system libs only).
+if [ -n "$VS_SP" ] && [ -f "$VS_SP/libvapoursynthfilters.dylib" ]; then
+    cp -f "$VS_SP/libvapoursynthfilters.dylib" "$LIBS/libvapoursynthfilters.dylib"
+    install_name_tool -id @loader_path/libvapoursynthfilters.dylib "$LIBS/libvapoursynthfilters.dylib"
+    log "libvapoursynthfilters.dylib -> Libraries/ (R82+ core)"
+fi
 
 # ── 1. Filter plugins: curated set → Contents/Plugins ──────────────────────
 # Curated = the proven-loadable set (scripts/install_vendored_plugins.py
@@ -292,6 +304,10 @@ while IFS= read -r winbin; do
 done < <(find "$CONTENTS" -type f \( -name '*.exe' -o -name '*.dll' -o -name '*.bat' \) \
     -path '*/site-packages/pip/*' 2>/dev/null)
 [ "$pruned" -gt 0 ] && log "pruned $pruned Windows-only pip launcher(s) from the payload"
+
+# CPython's stdlib test tree: sparse-zip fixtures are un-unpackable by the
+# notary service and the directory is dead weight in a shipped runtime.
+find "$CONTENTS" -type d -path "*/lib/python3*/test" -prune -exec rm -rf {} + 2>/dev/null || true
 
 # ── 4c. Re-sign everything we touched (ad-hoc) ─────────────────────────────
 # install_name_tool invalidates signatures; on arm64 macOS the kernel

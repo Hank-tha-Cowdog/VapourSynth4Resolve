@@ -110,8 +110,13 @@ add_custom_command(TARGET vapoursynth_ofx POST_BUILD
 # only runs on this machine. The portable staging closes every load path
 # inside the bundle:
 #
-#   Contents/Libraries/libvsscript.dylib        (VS R75 script engine)
-#   Contents/Libraries/libvapoursynth.4.dylib   (VS R75 core)
+#   Contents/Libraries/libvsscript.dylib        (VS script engine, active prefix)
+#   Contents/Libraries/libvapoursynth.4.dylib   (VS core, active prefix)
+#   (+ libvapoursynthfilters.dylib when the prefix has it — R82+ splits the
+#    standard filters out of the core as a library the core dlopens from its
+#    own directory; handled conditionally in repair_portable_bundle.sh because
+#    R79 and older cores do not ship it. Shipping core choice: R79 — R80+
+#    removed API-3 plugin support and 36/61 curated plugins are still API 3.)
 #   Contents/Resources/vs-python/vapoursynth/    (Python package incl. .abi3.so)
 #   Contents/Resources/vs-python/<helpers>       (havsfunc/mvsfunc/etc, when found)
 #   Contents/Frameworks/Python.framework         (embedded CPython)
@@ -211,6 +216,7 @@ if(VSRES_PORTABLE_BUNDLE)
             ${PORTABLE_DIR}/Contents
             ${CMAKE_CURRENT_LIST_DIR}/portable_plugins.txt
             ${CMAKE_SOURCE_DIR}/vendor/Macos_vapoursynth_plugins/lib
+            ${VS_SP}
         DEPENDS vapoursynth_ofx
         COMMENT "Staging portable ${OFX_BUNDLE_NAME}.ofx.bundle at ${PORTABLE_DIR}"
     )

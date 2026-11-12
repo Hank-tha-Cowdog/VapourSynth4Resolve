@@ -61,7 +61,8 @@ function resolveRuntimes({ resourcesPath } = {}) {
         python: { path: python[0], source: python[1], exists: fs.existsSync(python[0]) },
         // pythonHome only meaningful for the legacy runtime/ standalone layout.
         pythonHome: path.join(runtimeRoot, 'python'),
-        ffmpeg: { path: path.join(runtimeRoot, 'ffmpeg', 'ffmpeg'), exists: false },
+        ffmpeg: { path: path.join(runtimeRoot, 'ffmpeg', 'ffmpeg'),
+                  exists: executableFile(path.join(runtimeRoot, 'ffmpeg', 'ffmpeg')) },
         ffprobe: { path: ffprobe, exists: executableFile(ffprobe) },
         // OFX bundle ROOT — the source for the install-for-Resolve helper.
         // Packaged: Resources/OFX; dev fallback: the staged portable bundle.
@@ -83,6 +84,18 @@ function resolveRuntimes({ resourcesPath } = {}) {
         // user dir (install_vendored_plugins.py output) is the dev/machine
         // fallback. A clean install resolves plugins entirely from the
         // bundle.
+        // vspipe — the standalone VapourSynth CLI, staged inside the OFX
+        // bundle's vs-python tree; executed by the render queue (resolved from
+        // the same bundle root as ofxBundle below).
+        vspipe: (function () {
+            const candidates = [];
+            if (res) candidates.push(path.join(res, 'OFX', 'VapourSynth.ofx.bundle',
+                'Contents', 'Resources', 'vs-python', 'vapoursynth', 'vspipe'));
+            candidates.push(path.join(__dirname, '..', '..', 'build-portable', 'portable',
+                'VapourSynth.ofx.bundle', 'Contents', 'Resources', 'vs-python', 'vapoursynth', 'vspipe'));
+            const found = candidates.find(p => executableFile(p));
+            return { path: found || candidates[0], exists: !!found };
+        })(),
         vsPluginPath: (function () {
             const bundlePlugins = path.join(res, 'OFX', 'VapourSynth.ofx.bundle',
                 'Contents', 'Plugins');

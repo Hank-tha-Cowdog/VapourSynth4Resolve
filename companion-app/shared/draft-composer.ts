@@ -325,6 +325,24 @@ def to32(c): return mvf.Depth(c, depth=32, sample=vs.FLOAT)
 
 `;
 
+    // WINDOW RULE (mirror of common/chain/composer.cpp rate_preserving_chain):
+    // only rate-preserving chains reorder the window to the output; a step
+    // that changes cadence would move the window's frame indices.
+    const ratePreserving = sorted.every((s) => {
+        if (s.type === 'qtgmc') {
+            const d = s.params && typeof (s.params as Record<string, unknown>).fpsDivisor === 'number'
+                ? (s.params as Record<string, unknown>).fpsDivisor as number : 2;
+            return d !== 1;
+        }
+        if (s.type === 'script') {
+            const code = s.params && typeof (s.params as Record<string, unknown>).code === 'string'
+                ? (s.params as Record<string, unknown>).code as string : '';
+            return !['BlockFPS', 'AssumeFPS', 'ChangeFPS', 'ConvertFPS', 'InterFrame',
+                'FlowFPS', 'FrameRate', 'Interpolate', 'RIFE', 'Rife'].some(n => code.includes(n));
+        }
+        return true;
+    });
+
     // SOURCE section — mirror native. Draft without an identified source
     // cannot direct-load; the preview refuses honestly rather than binding
     // another node's file.
@@ -334,7 +352,13 @@ def to32(c): return mvf.Depth(c, depth=32, sample=vs.FLOAT)
     } else {
         py += pyHexPathStmt('_vsres_src_path', filePath);
         py += `src = core.lsmas.LWLibavSource(_vsres_src_path)\n`;
-        if (hasTrim) {
+        if (hasTrim && ratePreserving) {
+            // WINDOW RULE (mirrors common/chain/composer.cpp): the window is a
+            // sibling variable; the chain runs on the FULL source so temporal
+            // filters keep context at the clip's head/tail, and the window is
+            // applied to the chain output below.
+            py += `src_window = core.std.Trim(src, first=${src!.sourceInPoint}, last=${src!.sourceOutPoint})\n`;
+        } else if (hasTrim) {
             py += `src = core.std.Trim(src, first=${src!.sourceInPoint}, last=${src!.sourceOutPoint})\n`;
         }
     }
@@ -359,9 +383,15 @@ def to32(c): return mvf.Depth(c, depth=32, sample=vs.FLOAT)
         }
     });
 
+    if (hasTrim && ratePreserving) {
+        py += `clip = core.std.Trim(clip, first=${src!.sourceInPoint}, last=${src!.sourceOutPoint})\n`;
+    }
+
     if (cfg.mix < 1.0) {
-        py += `_mix_ref = src
-if clip.format.id != _mix_ref.format.id:
+        py += (hasTrim && ratePreserving ? `_mix_ref = src_window
+` : `_mix_ref = src
+`);
+        py += `if clip.format.id != _mix_ref.format.id:
     _mix_ref = core.resize.Bicubic(src, format=clip.format.id, matrix_s='709')
 clip = core.std.Merge(_mix_ref, clip, weight=${cfg.mix})
 `;
