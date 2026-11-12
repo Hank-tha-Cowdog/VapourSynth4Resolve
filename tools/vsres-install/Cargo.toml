@@ -1,0 +1,19 @@
+[package]
+name = "vsres-install"
+version = "0.1.0"
+edition = "2021"
+description = "Install/uninstall the VapourSynth for Resolve OFX bundle (VapourSynth4Resolve)"
+license = "MIT"
+
+[[bin]]
+name = "vsres-install"
+path = "src/main.rs"
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
+
+[dependencies]
+# intentionally none — this helper runs with admin orchestration; a zero-dep
+# binary keeps the supply chain and review surface minimal.

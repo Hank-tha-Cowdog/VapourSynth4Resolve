@@ -20,6 +20,10 @@ small, well-tested changes are easiest to review.
   modules).
 - The companion test files live in `companion-app/electron/__test_*.js` (run
   with `node --test`); native suites build via CMake (`tests/`).
+- CI (`companion-app/scripts/run_test_suite.sh` + the GitHub workflow) runs the
+  unit suites on every push. Suites that validate BUILT artifacts (staged
+  bundle, packaged app, vendored dylibs) run at release time and locally
+  wherever those artifacts exist.
 - The JS draft emitter and the native composer are held to **byte parity** by
   a shared fixture (`tests/fixtures/qtgmc_parity.json`) consumed by both a
   native and a JS test. If you touch either emitter, both tests must stay

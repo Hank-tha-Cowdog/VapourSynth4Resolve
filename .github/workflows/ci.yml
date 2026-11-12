@@ -39,14 +39,27 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install VapourSynth (Homebrew)
-        run: brew install vapoursynth
+      - name: Homebrew deps (zimg + a build Python)
+        run: |
+          brew install zimg
+          for v in 3.14 3.13 3.12; do
+            if brew install "python@$v"; then break; fi
+          done
+      - name: Cache vendored VapourSynth
+        uses: actions/cache@v4
+        with:
+          path: vendor/vapoursynth
+          key: vs-vendor-${{ runner.arch }}-${{ hashFiles('scripts/build-vapoursynth.sh') }}
+      - name: Build VapourSynth (project-local prefix)
+        run: scripts/build-vapoursynth.sh
       - name: Configure
-        run: cmake -S . -B build-ci -DCMAKE_BUILD_TYPE=Release -DVSRES_BUILD_TESTS=ON
+        run: cmake -S . -B build-ci -DCMAKE_BUILD_TYPE=Release -DVSRES_BUILD_TESTS=ON -DVSRES_VS_PREFIX="$(pwd)/vendor/vapoursynth/active"
       - name: Build
         run: cmake --build build-ci -j 4
       - name: CTest
         run: ctest --test-dir build-ci --output-on-failure --no-tests=error
+      - name: Rust helper (vsres-install) tests
+        run: cargo test --manifest-path tools/vsres-install/Cargo.toml
 
   python:
     runs-on: macos-latest

@@ -24,8 +24,6 @@ compile_commands.json
 
 # macOS bundles in working tree
 *.ofx.bundle/
-# but the vendored OpenFX SDK ships its example Makefiles
-!docs/ofx-sdk/**/Makefile
 !docs/ofx-sdk/**/*.ofx.bundle/
 
 # Companion app
@@ -61,3 +59,6 @@ __pycache__/
 tests/fixtures/*.lwi
 tests/fixtures/*.y4m
 tests/fixtures/*.lwi
+
+# Rust build artifacts
+tools/vsres-install/target/
