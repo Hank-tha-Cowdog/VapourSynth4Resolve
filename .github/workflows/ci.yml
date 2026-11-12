@@ -1,0 +1,71 @@
+# CI — runs on every push to main and every pull request.
+#
+# Three jobs:
+#   companion — the full node test suite (scripts/run_test_suite.sh), the
+#               TypeScript check and the Vite renderer build.
+#   native    — the C++ chain composer + private-IO suites against a
+#               Homebrew VapourSynth (pkg-config), plus a full plugin build.
+#   python    — the self-contained python unit suites (fake-port tests).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  companion:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: companion-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install dependencies
+        run: npm ci
+      - name: TypeScript + renderer build
+        run: npm run build
+      - name: Test suite
+        run: bash scripts/run_test_suite.sh
+
+  native:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install VapourSynth (Homebrew)
+        run: brew install vapoursynth
+      - name: Configure
+        run: cmake -S . -B build-ci -DCMAKE_BUILD_TYPE=Release -DVSRES_BUILD_TESTS=ON
+      - name: Build
+        run: cmake --build build-ci -j 4
+      - name: CTest
+        run: ctest --test-dir build-ci --output-on-failure --no-tests=error
+
+  python:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit suites
+        run: |
+          set -e
+          for t in \
+            tests/__test_portable_path_audit.py \
+            tests/test_install_ofx_toml.py \
+            tests/test_install_vendored_plugins.py \
+            tests/test_install_vsmlrt_adapter.py \
+            tests/test_preview_frame_timebase.py \
+            tests/test_rebuild_ffprobe.py \
+            tests/test_stage_ffprobe.py \
+            tests/test_toml_concurrency.py \
+            tests/unit/test_macos_ofx_transaction.py \
+          ; do
+            echo "== $t"
+            python3 "$t"
+          done
