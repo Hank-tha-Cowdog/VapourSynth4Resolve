@@ -22,7 +22,7 @@ marked [read]; unresolved questions are explicit and must not be assumed resolve
 ### VapourSynth core runtime (bundled)
 - `libvapoursynth.4.dylib`, `libvsscript.dylib`: **VapourSynth R82**, LGPL-2.1-or-later [read: `vendor/vapoursynth/src-R82/COPYING.LESSER`]. LGPL relocation/source obligations apply to redistribution of these dylibs.
 - `vapoursynth` Python package + `.abi3.so`: LGPL, same source.
-- zimg (inside resize): license **not yet read at the bundled version** → unresolved Q2.
+- zimg (inside resize): the PATCHED zimg inside resize2 still needs wrap/patch/packagefiles binding (Q2). The core zimg inside `libvapoursynth` = Homebrew zimg **3.0.6, statically linked** (upstream sekrit-twc/zimg `release-3.0.6`, commit `f819b14e…`; the in-tree `zimg.wrap` was not materialised — pinned 2026-11-12 anyway).
 
 ### Embedded CPython
 - `Python.framework` 3.14.7: **PSF license**; the payload carries 90+ upstream license files [verified present in payload]; stdlib test `certdata` .pem fixtures are upstream public test data (noted, acceptable).
@@ -36,7 +36,7 @@ existing installs / vendor tree):
 | Component | Source | License | Redistribution |
 | --- | --- | --- | --- |
 | libfftw3f.3 (FFW fftw) | /opt/homebrew/opt/fftw (brew) | GPL-2.0+ | OK with our GPLv3 (native); needs GPL notice + source offer in the DMG |
-| libmpdec.4 (mpdecimal) | /opt/homebrew/opt/mpdecimal | LGPL-2.1+ (bundled .so) | OK (dynamic linking); notice required |
+| libmpdec.4 (mpdecimal) | /opt/homebrew/opt/mpdecimal | BSD-2-Clause (licensing review §7.3 — corrects the earlier LGPL label) | OK; notice required |
 | libssl.3 / libcrypto.3 (OpenSSL 3) | /opt/homebrew/opt/openssl@3 | Apache-2.0 | OK; NOTICE file required |
 | libzstd.1 (Zstandard) | /opt/homebrew/opt/zstd | BSD-3-Clause | OK; notice required |
 | liblzma.5 (xz/liblzma) | /opt/homebrew/opt/xz | 0BSD (liblzma) | OK |
@@ -65,6 +65,7 @@ existing installs / vendor tree):
   release blocker; the audit table is the concrete work-list for either a
   rebuild-from-source pass or counsel review.
 | CPython 3.14.7 (Homebrew build) | /opt/homebrew/opt/python@3.14 | PSF-2.0 | OK; REQUIRES macOS 26 (minos) — see packaging.md decision item |
+| pip 26.2.1 + wheel 0.47.0 (+ `vsres-vapoursynth.pth`) | embedded site-packages | MIT (bundled METADATA) | OK; add notice rows (new in the 2026-11-12 rights map); vendored-dep license files present under `dist-info/licenses/` |
 
 ### Filter plugins (63 dylibs; source github.com/yuygfgg/Macos_vapoursynth_plugins @ adb6840 [read: vendored .git])
 - **Per-component licenses NOT inventoried** — the collection repo ships one root GPLv3 [read] and `tools/bundle.py` has **no license handling at all**. Upstream licenses for mvtools, fmtconv, nnedi3, tivtc, vivtc, BM3D(+Metal), KNLMeansCL, neo-f3kdb, CAS, lghost, WNNM, vs-nlm_ispc, misc, resize2, … **must be read per project at the exact bundled revisions** → unresolved Q3 (release blocker B2).

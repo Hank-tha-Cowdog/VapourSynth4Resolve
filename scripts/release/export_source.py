@@ -48,6 +48,8 @@ INCLUDE_ROOTS = [
     "tests",
     "docs",
     "companion-app",
+    ".github",
+    "tools",
 ]
 INCLUDE_ROOT_FILES = [
     "LICENSE",
@@ -55,13 +57,15 @@ INCLUDE_ROOT_FILES = [
     "CMakeLists.txt",
     ".tool-versions",
     ".gitignore",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
 ]
 
 # never copied, whatever the allowlist says (directory names, any depth):
 EXCLUDE_DIR_NAMES = {
     ".git", ".cache", ".venv", "__pycache__", "node_modules", "vendor",
     "build", "dist", "build-portable", "build-ffprobe", "build-ffprobe-wip",
-    "release-export", "checkout", "pal-recovery",
+    "release-export", "checkout", "pal-recovery", "target",
 }
 # directory-name patterns (fnmatch), any depth:
 EXCLUDE_DIR_GLOBS = ["build-*", "*.app", "*.framework", "*.xcodeproj"]
@@ -96,6 +100,7 @@ DOCS_EXCLUDED_GLOBS = [
     "requirements-checklist.md",
     "audit-fixes-*",
     "notice-source-followup*",
+    "rights-map-*",          # internal until owner-reviewed
 ]
 DOCS_EXCLUDED_EXCEPTIONS = []  # every internal working record is excluded by default
 

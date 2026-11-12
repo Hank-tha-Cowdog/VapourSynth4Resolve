@@ -115,8 +115,16 @@ def main():
 
     staged = tempfile.mkdtemp(prefix="vsres-plugin-stage-")
     installed, skipped, failed = [], [], []
+    # Curated-set hygiene (2026-11-12 rights map, flag R2-K): libbore and
+    # libnnedi3cl are excluded from every final distribution path (no
+    # established rights binding). The shipped portable bundle already
+    # excludes them; this user-path installer must match.
+    EXCLUDED_DYLIBS = {"libbore.dylib", "libnnedi3cl.dylib"}
     for name in sorted(os.listdir(VENDOR_LIB)):
         if not name.endswith(".dylib"):
+            continue
+        if name in EXCLUDED_DYLIBS:
+            print(f"  - {name}: excluded (curated set)")
             continue
         src = os.path.join(VENDOR_LIB, name)
         dst = os.path.join(staged, name)
