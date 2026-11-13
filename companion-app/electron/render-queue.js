@@ -36,6 +36,10 @@ const ENCODERS = {
     h264: {
         extension: '.mp4', label: 'H.264 (system ffmpeg)',
         args: ['-c:v', 'libx264', '-crf', '16', '-preset', 'slow', '-pix_fmt', 'yuv420p'],
+        // The bundled ffmpeg is LGPL-only and has no libx264 (verified against
+        // the shipped beta.2 runtime: 0 x264 encoders). This preset must route
+        // to a SYSTEM ffmpeg; it is hidden and refused when none is found.
+        needs: 'system-ffmpeg',
     },
 };
 
@@ -47,7 +51,8 @@ function marker() { return 'rq-' + Date.now().toString(36) + '-' + Math.random()
 function createRenderQueue(options = {}) {
     const {
         spawnImpl,                        // (cmd, argv, opts) => ChildProcess-like
-        resolveRuntimes,                  // () => { vspipe, ffmpeg, pluginPath, configDir }
+        resolveRuntimes,                  // (encoderKey) => { python, runner, ffmpeg, ffmpegSource, pluginPath }
+        systemFfmpegCapable = () => false, // () => bool: a system ffmpeg with libx264 exists
         ensureRuntimeConfig,              // () => void  (regenerates the vapoursynth.toml)
         jobsFile = null,                  // optional persistence path
         emit = () => {},                  // (event) => void
@@ -96,6 +101,9 @@ function createRenderQueue(options = {}) {
         const encoder = request.encoder ?? 'prores';
         if (!Object.prototype.hasOwnProperty.call(ENCODERS, encoder)) {
             return { ok: false, error: `unknown encoder "${encoder}" (expected ${Object.keys(ENCODERS).join(', ')})` };
+        }
+        if (ENCODERS[encoder].needs === 'system-ffmpeg' && !systemFfmpegCapable()) {
+            return { ok: false, error: 'H.264 needs a system ffmpeg with libx264 (none found) — install one, or pick ProRes or FFV1' };
         }
         let outputPath = request.outputPath;
         if (typeof outputPath !== 'string' || !path.isAbsolute(outputPath)) {
@@ -190,10 +198,12 @@ function createRenderQueue(options = {}) {
         load();
         const job = jobs.find(j => j.state === 'queued');
         if (!job) return;
-        const rt = resolveRuntimes();
+        const rt = resolveRuntimes(job.encoder);
         if (!rt || !rt.python || !rt.runner || !rt.ffmpeg) {
             job.state = 'error';
-            job.error = 'bundled render runtimes are not available — reinstall the app runtime';
+            job.error = (!rt || !rt.ffmpeg) && ENCODERS[job.encoder]?.needs === 'system-ffmpeg'
+                ? 'H.264 needs a system ffmpeg with libx264 (none found) — install one, or pick ProRes or FFV1'
+                : 'bundled render runtimes are not available — reinstall the app runtime';
             persist(); notify();
             return pump();
         }
@@ -321,7 +331,9 @@ function createRenderQueue(options = {}) {
         add, cancel, remove, clearFinished,
         list: () => { load(); return snapshot(); },
         find: (id) => { load(); const j = find(id); return j ? { ...j } : null; },
-        encoders: () => Object.fromEntries(Object.entries(ENCODERS).map(([k, v]) => [k, { label: v.label, extension: v.extension }])),
+        encoders: () => Object.fromEntries(Object.entries(ENCODERS)
+            .filter(([, v]) => v.needs !== 'system-ffmpeg' || systemFfmpegCapable())
+            .map(([k, v]) => [k, { label: v.label, extension: v.extension }])),
         _internals: { parseProgress, pump },
     };
 }

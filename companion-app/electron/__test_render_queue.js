@@ -311,3 +311,90 @@ test('parseProgress accepts runner formats and rejects noise', () => {
     assert.equal(parse('Render failed:'), null);
     assert.equal(parse(''), null);
 });
+
+// ---- H.264 system-ffmpeg routing (2026-11-13) ------------------------------
+// The bundled ffmpeg is LGPL-only (no libx264 — verified against the shipped
+// beta.2 runtime). The h264 preset must route to a SYSTEM ffmpeg, be hidden
+// when none is capable, and refuse at add/run time — never silently encode
+// with a runtime that cannot.
+
+test('h264 hidden from the encoder list when no capable system ffmpeg', () => {
+    const h = makeHarness();
+    const q = createRenderQueue({
+        spawnImpl: h.spawnImpl, resolveRuntimes: () => runtimes(),
+        systemFfmpegCapable: () => false,
+    });
+    const enc = q.encoders();
+    assert.equal(enc.h264, undefined);
+    assert.ok(enc.prores && enc.ffv1);
+});
+
+test('h264 listed when a capable system ffmpeg exists', () => {
+    const h = makeHarness();
+    const q = createRenderQueue({
+        spawnImpl: h.spawnImpl, resolveRuntimes: () => runtimes(),
+        systemFfmpegCapable: () => true,
+    });
+    assert.equal(q.encoders().h264.label, 'H.264 (system ffmpeg)');
+});
+
+test('adding an h264 job without a capable system ffmpeg is refused', () => {
+    const dir = tmpDir();
+    const h = makeHarness();
+    const q = createRenderQueue({
+        spawnImpl: h.spawnImpl, resolveRuntimes: () => runtimes(),
+        systemFfmpegCapable: () => false,
+    });
+    const script = writeScript(dir);
+    const res = q.add({ scriptPath: script, outputPath: path.join(dir, 'o.mp4'), encoder: 'h264' });
+    assert.equal(res.ok, false);
+    assert.match(res.error, /system ffmpeg/);
+});
+
+test('h264 job routes through the resolveRuntimes(encoder) system path', async () => {
+    const dir = tmpDir();
+    const h = makeHarness();
+    const calls = [];
+    const q = createRenderQueue({
+        spawnImpl: autoSpawn(h),
+        resolveRuntimes: (k) => {
+            calls.push(k);
+            return k === 'h264'
+                ? { ...runtimes(), ffmpeg: '/fake/system/ffmpeg', ffmpegSource: 'system' }
+                : runtimes();
+        },
+        systemFfmpegCapable: () => true,
+    });
+    const script = writeScript(dir);
+    const res = q.add({ scriptPath: script, outputPath: path.join(dir, 'o'), encoder: 'h264' });
+    assert.equal(res.ok, true);
+    assert.equal(q.find(res.id).outputPath, path.join(dir, 'o.mp4'));
+    await new Promise(resolve => setTimeout(resolve, 80));
+    assert.equal(q.find(res.id).state, 'done');
+    assert.ok(calls.includes('h264'), 'resolveRuntimes must receive the job encoder');
+    const ff = h.spawns.find(s => s.kind === 'ffmpeg');
+    assert.equal(ff.cmd, '/fake/system/ffmpeg');       // routed to the system ffmpeg
+    assert.ok(ff.argv.includes('libx264'));
+    const info = h.spawns.find(s => s.kind === 'info');
+    assert.equal(info.cmd, '/fake/bundle/python3');    // python stays bundled
+});
+
+test('queued h264 job fails with the specific message when no system ffmpeg appears', async () => {
+    const dir = tmpDir();
+    const h = makeHarness();
+    // Capable at add-time (race: system ffmpeg removed by run-time), then
+    // resolveRuntimes reports no ffmpeg for h264.
+    const q = createRenderQueue({
+        spawnImpl: h.spawnImpl,
+        resolveRuntimes: () => ({ ...runtimes(), ffmpeg: null, ffmpegSource: null }),
+        systemFfmpegCapable: () => true,
+    });
+    const script = writeScript(dir);
+    const res = q.add({ scriptPath: script, outputPath: path.join(dir, 'o.mp4'), encoder: 'h264' });
+    assert.equal(res.ok, true);
+    await new Promise(resolve => setTimeout(resolve, 80));
+    const job = q.find(res.id);
+    assert.equal(job.state, 'error');
+    assert.match(job.error, /system ffmpeg/);
+    assert.equal(h.spawns.length, 0, 'no process may start without a capable runtime');
+});

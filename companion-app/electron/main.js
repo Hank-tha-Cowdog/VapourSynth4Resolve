@@ -243,21 +243,48 @@ const PATHS = {
 // stand-alone vspipe excursions; the module route needs none of it.)
 const RENDER_QUEUE_FILE = path.join(os.homedir(),
   'Library/Application Support/VapourSynth-OFX', 'render-queue.json');
-function renderQueueRuntimes() {
-  const ffmpeg = [RUNTIMES.ffmpeg,
-    { path: '/opt/homebrew/bin/ffmpeg', exists: fs.existsSync('/opt/homebrew/bin/ffmpeg') },
-    { path: '/usr/local/bin/ffmpeg', exists: fs.existsSync('/usr/local/bin/ffmpeg') }]
-    .find(c => c && c.exists && c.path);
+// System-ffmpeg detection for the H.264 preset (the bundled ffmpeg is
+// LGPL-only, no libx264): find the first real system ffmpeg and check it can
+// encode H.264. Cached for the app run.
+let systemFfmpegCache = null;
+function systemFfmpeg() {
+  if (systemFfmpegCache) return systemFfmpegCache;
+  const { spawnSync } = require('child_process');
+  const candidates = ['/opt/homebrew/bin/ffmpeg', '/usr/local/bin/ffmpeg'];
+  const found = candidates.find(p => { try { return fs.existsSync(p); } catch { return false; } });
+  let x264 = false;
+  if (found) {
+    try {
+      const r = spawnSync(found, ['-hide_banner', '-encoders'], { encoding: 'utf8', timeout: 5000 });
+      x264 = typeof r.stdout === 'string' && /libx264/.test(r.stdout);
+    } catch { x264 = false; }
+  }
+  systemFfmpegCache = { path: found || null, x264 };
+  return systemFfmpegCache;
+}
+function renderQueueRuntimes(encoderKey) {
+  const needsSystem = encoderKey === 'h264';
+  const sys = systemFfmpeg();
+  let ffmpeg = null, source = null;
+  if (needsSystem) {
+    if (sys.path && sys.x264) { ffmpeg = sys.path; source = 'system'; }
+  } else {
+    const bundled = RUNTIMES.ffmpeg;
+    if (bundled && bundled.exists && bundled.path) { ffmpeg = bundled.path; source = 'bundled'; }
+    else if (sys.path) { ffmpeg = sys.path; source = 'system'; }
+  }
   return {
     python: RUNTIMES.python && RUNTIMES.python.exists ? RUNTIMES.python.path : null,
     runner: helperScript('render_chain_runner.py'),
-    ffmpeg: ffmpeg ? ffmpeg.path : null,
+    ffmpeg,
+    ffmpegSource: source,
     pluginPath: PATHS.vsPluginPath,
   };
 }
 const renderQueue = createRenderQueue({
   spawnImpl: spawn,
   resolveRuntimes: renderQueueRuntimes,
+  systemFfmpegCapable: () => systemFfmpeg().x264 === true,
   jobsFile: RENDER_QUEUE_FILE,
   emit: (event) => { try { editorWindow?.webContents?.send('render-queue:event', event); } catch { /* window gone */ } },
 });
