@@ -18,7 +18,6 @@ libdmetrics.dylib
 libEdgeFixer.dylib
 libeedi2.dylib
 libeedi3m.dylib
-libfft3dfilter.dylib
 libfftspectrum.dylib
 libfieldhint.dylib
 libfmtconv.dylib
@@ -34,15 +33,12 @@ libmvtools.dylib
 libneo-f3kdb.dylib
 libnnedi3.dylib
 libPickFrames.dylib
-libPSI.dylib
 libremovedirtvs.dylib
 libremovegrain.dylib
 libresize2.dylib
 libretinex.dylib
 librgsf.dylib
 librowmanip.dylib
-libsangnom.0.dylib
-libscxvid.dylib
 libsmoothuv.dylib
 libsneedif.dylib
 libtcanny.dylib
@@ -53,7 +49,6 @@ libtemporalsoften2.dylib
 libtivtc.dylib
 libttempsmooth.dylib
 libvivtc.dylib
-libvsnlm_ispc.dylib
 libvsort.dylib
 libvszip.dylib
 libwnnm.dylib

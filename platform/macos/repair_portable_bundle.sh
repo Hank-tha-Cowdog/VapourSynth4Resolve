@@ -85,6 +85,9 @@ fi
 if [ -d "$VENDOR_LIBS/../support" ]; then
     mkdir -p "$CONTENTS/support"
     cp "$VENDOR_LIBS/../support/"*.dylib "$CONTENTS/support/"
+    # Curated-out plugin's support copy goes too (rights map Flags 2+3,
+    # 2026-11-13): excluding a Plugins copy must cover its support twin.
+    rm -f "$CONTENTS/support/libscxvid.dylib"
     for s in "$CONTENTS/support"/*.dylib; do
         install_name_tool -id "@rpath/$(basename "$s")" "$s" 2>/dev/null || true
     done

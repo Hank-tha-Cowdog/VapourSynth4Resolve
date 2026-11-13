@@ -1,6 +1,6 @@
 {
   "name": "vapoursynth-companion",
-  "version": "2.0.0-beta.1",
+  "version": "2.0.0-beta.2",
   "description": "Popout companion window for the VapourSynth OFX plugin in DaVinci Resolve. Forked from VapourSage (https://github.com/Hank-tha-Cowdog/vapoursage).",
   "main": "electron/main.js",
   "scripts": {

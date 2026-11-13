@@ -119,7 +119,12 @@ def main():
     # libnnedi3cl are excluded from every final distribution path (no
     # established rights binding). The shipped portable bundle already
     # excludes them; this user-path installer must match.
-    EXCLUDED_DYLIBS = {"libbore.dylib", "libnnedi3cl.dylib"}
+    EXCLUDED_DYLIBS = {
+    "libbore.dylib", "libnnedi3cl.dylib",          # no CT entry (R2-K)
+    # curated out of the first shipped set (rights map, 2026-11-13):
+    "libfft3dfilter.dylib", "libsangnom.0.dylib",   # notice wording
+    "libPSI.dylib", "libscxvid.dylib", "libvsnlm_ispc.dylib",  # drop-candidates
+}
     for name in sorted(os.listdir(VENDOR_LIB)):
         if not name.endswith(".dylib"):
             continue
