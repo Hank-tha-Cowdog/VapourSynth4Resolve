@@ -51,9 +51,12 @@ INCLUDE_ROOTS = [
     ".github",
     "tools",
 ]
+# NOTE: README.md is deliberately NOT exported. The public landing-page
+# README is owned by the public repo workflow (edit it in place on main);
+# the private tree's README.md is development documentation. Syncs must
+# also pass --exclude=README.md so --delete cannot remove it.
 INCLUDE_ROOT_FILES = [
     "LICENSE",
-    "README.md",
     "CMakeLists.txt",
     ".tool-versions",
     ".gitignore",
@@ -101,6 +104,7 @@ DOCS_EXCLUDED_GLOBS = [
     "audit-fixes-*",
     "notice-source-followup*",
     "rights-map-*",          # internal until owner-reviewed
+    "rights-*",              # rights working records (grant maps, drafts)
     "owner-decisions-guide-*",  # internal decision support until owner-reviewed
     "authorship-record-*",   # internal until the upstream grant is filed
 ]

@@ -25,13 +25,23 @@ echo "== reachability =="
 $SSH 'echo up; sw_vers -productVersion; uname -m' || {
     echo "TESTBED UNREACHABLE — wake $HOST and retry." >&2; exit 3; }
 
-REMOTE_SCRATCH="vsres-qual-$STAMP"
+# RESUMABLE: with VSRES_QUAL_DIR set, repeated invocations reuse the same
+# remote dir and rsync --append-verify resumes where a sleep-interrupted
+# upload left off (mimir's wake windows are ~60s; scp cannot survive them).
+REMOTE_SCRATCH="${VSRES_QUAL_DIR:-vsres-qual-$STAMP}"
 echo "== uploading DMG ($LOCAL_SHA) =="
-$SSH "rm -rf ~/$REMOTE_SCRATCH && mkdir -p ~/$REMOTE_SCRATCH"
-scp -o ConnectTimeout=10 "$DMG" "$HOST:~/$REMOTE_SCRATCH/"
+$SSH "mkdir -p ~/$REMOTE_SCRATCH"
+rsync -e "ssh -o ConnectTimeout=10 -o BatchMode=yes" --partial --append-verify --timeout=45 \
+  "$DMG" "$HOST:~/$REMOTE_SCRATCH/"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+RS="$HERE/../../platform/macos/repair_portable_bundle.sh"
+[ -f "$RS" ] && rsync -e "ssh -o ConnectTimeout=10 -o BatchMode=yes" --timeout=30 \
+  "$RS" "$HOST:~/$REMOTE_SCRATCH/" || true
 
 echo "== remote qualification =="
-$SSH bash -s -- "$REMOTE_SCRATCH" "$(basename "$DMG")" "$LOCAL_SHA" <<'REMOTE'
+# Quote args for the REMOTE shell: ssh joins its argv into one command string,
+# and a DMG basename with spaces would otherwise word-split remotely.
+$SSH "bash -s -- '$REMOTE_SCRATCH' '$(basename "$DMG")' '$LOCAL_SHA'" <<'REMOTE'
 set -euo pipefail
 SCRATCH="$HOME/$1"; DMGBASE="$2"; LOCAL_SHA="$3"
 cd "$SCRATCH"
@@ -52,7 +62,12 @@ say "prior app-install present: $([ -d '/Applications/VapourSynth Companion.app'
 say "prior OFX bundle present: $([ -d /Library/OFX/Plugins/VapourSynth.ofx.bundle ] && echo yes || echo no)"
 
 say "== mount =="
-MP=$(hdiutil attach -nobrowse -readonly "$DMG" | awk '/\/Volumes\// {print $NF}' | tail -1)
+# Explicit mountpoint: the DMG name contains spaces, and parsing hdiutil's
+# output with $NF on a spaced /Volumes path yields a broken mountpoint
+# (2026-11-13 wake-burst trace: MP="2.0.0-beta.2-arm64").
+MP="$SCRATCH/mnt"
+mkdir -p "$MP"
+hdiutil attach -nobrowse -readonly "$DMG" -mountpoint "$MP" >>"$EVID" 2>&1
 say "mounted at: $MP"
 ls "$MP" | tee -a "$EVID"
 
@@ -108,5 +123,7 @@ echo "== pulling evidence =="
 OUTDIR="${OUTDIR:-$PWD/testbed-qualification}"
 mkdir -p "$OUTDIR"
 scp -o ConnectTimeout=10 "$HOST:~/$REMOTE_SCRATCH/evidence.log" "$OUTDIR/qualification-$STAMP.log" || true
-rm -f "$REMOTE_SCRATCH/evidence.log" 2>/dev/null || true
+# Clean the remote scratch (and stale partial dirs from earlier attempts) —
+# only once the evidence is safely local.
+[ -s "$OUTDIR/qualification-$STAMP.log" ] && $SSH "rm -rf ~/vsres-qual-*" 2>/dev/null || true
 echo "evidence: $OUTDIR/qualification-$STAMP.log"
