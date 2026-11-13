@@ -26,10 +26,11 @@ function toOllamaTools(tools) {
 }
 
 // One streamed completion turn. Returns { ok, error?, content, toolCalls }.
-// The streaming/EOF/error-discipline of the previous single-turn version is
-// preserved; terminal reporting moves to the caller because a WITH-TOOLS turn
-// is no longer terminal (the loop continues).
-async function oneTurn({ url, modelId, apiMessages, toolDefs }) {
+// onText delivers each content fragment AS IT ARRIVES (the streaming
+// contract: partial text must reach the UI before any terminal error, and
+// multi-fragment records stay separate chunks); `content` accumulates the
+// same text for the assistant turn the tool loop feeds back.
+async function oneTurn({ url, modelId, apiMessages, toolDefs, onText }) {
   let reader;
   try {
     const response = await fetch(url, {
@@ -68,7 +69,7 @@ async function oneTurn({ url, modelId, apiMessages, toolDefs }) {
       }
       const msg = j?.message;
       const text = msg?.content;
-      if (text) { content += text; }
+      if (text) { content += text; if (onText) onText(text); }
       if (Array.isArray(msg?.tool_calls)) {
         for (const call of msg.tool_calls) {
           const key = JSON.stringify(call);
@@ -128,9 +129,14 @@ async function streamChat({ modelId, messages, system, tools, executeAgentTool, 
 
   try {
     for (let iteration = 0; iteration < MAX_TOOL_ITERATIONS; iteration++) {
-      const turn = await oneTurn({ url, modelId, apiMessages, toolDefs });
-      if (!turn.ok) { reportTerminal('error', turn.error); return; }
-      if (turn.content) callbacks.onChunk(turn.content);
+      const turn = await oneTurn({ url, modelId, apiMessages, toolDefs,
+        onText: (t) => callbacks.onChunk(t) });
+      if (!turn.ok) {
+        // Preceding text already streamed via onText; the streamed error is
+        // terminal for the turn and suppresses anything after it.
+        reportTerminal('error', turn.error);
+        return;
+      }
 
       const calls = turn.toolCalls.filter(c => c && c.function && typeof c.function.name === 'string');
       if (calls.length === 0 || typeof executeAgentTool !== 'function') {
