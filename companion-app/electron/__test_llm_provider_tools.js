@@ -6,6 +6,7 @@ const assert = require('node:assert/strict');
 
 const openai = require('./llm/openai.js');
 const ollama = require('./llm/ollama.js');
+const google = require('./llm/google.js');
 
 const TOOLS = [{
   name: 'probe_source',
@@ -240,4 +241,89 @@ test('ollama: no tools → unchanged single-turn streaming', async () => {
   } finally {
     global.fetch = originalFetch;
   }
+});
+
+
+// ---- Google Gemini loop ----------------------------------------------------
+
+function fakeGoogleClient(turns) {
+  const calls = [];
+  return {
+    calls,
+    client: {
+      models: {
+        generateContentStream: async (params) => {
+          calls.push(params);
+          const turn = turns.shift();
+          if (!turn) throw new Error('fake genai: no scripted turn left');
+          return (async function* () { for (const chunk of turn) yield chunk; })();
+        },
+      },
+    },
+  };
+}
+
+test('google loop: translates tools to functionDeclarations, executes calls, feeds functionResponse back, completes', async () => {
+  const fake = fakeGoogleClient([
+    [ { text: 'Checking the source…' },
+      { functionCalls: [{ name: 'probe_source', args: { path: '/g.mov' } }] } ],
+    [ { text: 'Done.' } ],
+  ]);
+  const { events, callbacks } = collect();
+  let executed = null;
+  await google.streamChat({
+    modelId: 'gemini-x', messages: [{ role: 'user', text: 'go' }], system: 'sys',
+    tools: TOOLS,
+    executeAgentTool: async (name, input, meta) => { executed = { name, input, meta }; return 'probe says ok'; },
+    apiKey: 'k', callbacks, clientFactory: () => fake.client,
+  });
+  // Tool translation
+  assert.deepEqual(fake.calls[0].config.tools, [{
+    functionDeclarations: [{ name: 'probe_source', description: 'Probe a media file', parameters: TOOLS[0].input_schema }],
+  }]);
+  assert.equal(fake.calls[0].config.systemInstruction, 'sys');
+  // Execution
+  assert.deepEqual(executed, { name: 'probe_source', input: { path: '/g.mov' }, meta: { toolUseId: null } });
+  // Contents the loop built for turn 2: model turn + functionResponse (role user)
+  const c2 = fake.calls[1].contents;
+  const modelTurn = c2.find(m => m.role === 'model' && m.parts.some(p => p.functionCall));
+  assert.ok(modelTurn, 'model functionCall turn recorded');
+  assert.equal(modelTurn.parts.find(p => p.text).text, 'Checking the source…');
+  const respTurn = c2.find(m => m.role === 'user' && m.parts.some(p => p.functionResponse));
+  assert.ok(respTurn, 'functionResponse turn recorded');
+  const fr = respTurn.parts[0].functionResponse;
+  assert.equal(fr.name, 'probe_source');
+  assert.deepEqual(fr.response, { result: 'probe says ok' });
+  // Callbacks
+  assert.deepEqual(events.chunks, ['Checking the source…', 'Done.']);
+  assert.equal(events.complete, 1);
+  assert.deepEqual(events.errors, []);
+  assert.deepEqual(events.activity.map(a => a.phase), ['start', 'end']);
+});
+
+test('google loop: executor failure feeds {error} and the loop continues', async () => {
+  const fake = fakeGoogleClient([
+    [ { functionCalls: [{ name: 'probe_source', args: {} }] } ],
+    [ { text: 'recovered' } ],
+  ]);
+  const { events, callbacks } = collect();
+  await google.streamChat({
+    modelId: 'gemini-x', messages: [], tools: TOOLS,
+    executeAgentTool: async () => { throw new Error('boom'); },
+    apiKey: 'k', callbacks, clientFactory: () => fake.client,
+  });
+  const respTurn = fake.calls[1].contents.find(m => m.parts.some(p => p.functionResponse));
+  assert.deepEqual(respTurn.parts[0].functionResponse.response, { error: 'Tool failed: boom' });
+  assert.equal(events.activity.find(a => a.phase === 'end').isError, true);
+  assert.deepEqual(events.chunks, ['recovered']);
+  assert.equal(events.complete, 1);
+});
+
+test('google: no tools → no tools config, plain streaming, one complete', async () => {
+  const fake = fakeGoogleClient([[ { text: 'hi' } ]]);
+  const { events, callbacks } = collect();
+  await google.streamChat({ modelId: 'm', messages: [], apiKey: 'k', callbacks, clientFactory: () => fake.client });
+  assert.equal('tools' in fake.calls[0].config, false);
+  assert.deepEqual(events.chunks, ['hi']);
+  assert.equal(events.complete, 1);
 });

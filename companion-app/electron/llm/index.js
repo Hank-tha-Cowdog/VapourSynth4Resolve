@@ -98,9 +98,12 @@ async function streamChat({ modelId, messages, system, tools, executeAgentTool, 
         apiKey, baseURL: endpoint, callbacks: fwd,
       });
     case 'google':
+      // Tool parity (beta-provider): Gemini runs the same agentic loop —
+      // tools translated to functionDeclarations, functionResponse feedback.
       return google.streamChat({
         modelId: parsed.apiModelId,
-        messages, system, apiKey, callbacks: fwd,
+        messages, system, tools: effectiveTools, executeAgentTool,
+        apiKey, callbacks: fwd,
       });
     case 'ollama':
       return ollama.streamChat({

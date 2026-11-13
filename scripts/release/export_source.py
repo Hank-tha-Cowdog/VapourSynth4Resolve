@@ -101,6 +101,8 @@ DOCS_EXCLUDED_GLOBS = [
     "audit-fixes-*",
     "notice-source-followup*",
     "rights-map-*",          # internal until owner-reviewed
+    "owner-decisions-guide-*",  # internal decision support until owner-reviewed
+    "authorship-record-*",   # internal until the upstream grant is filed
 ]
 DOCS_EXCLUDED_EXCEPTIONS = []  # every internal working record is excluded by default
 

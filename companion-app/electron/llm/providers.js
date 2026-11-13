@@ -37,7 +37,7 @@ module.exports = {
     needsApiKey: true,
     keychainAccount: 'google',
     defaultEndpoint: null,
-    supportsTools: false,
+    supportsTools: true,   // via the Gemini function-declaration loop
     models: [
       { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro (preview)' },
       { id: 'gemini-3.6-flash',       name: 'Gemini 3.6 Flash' },
@@ -75,7 +75,7 @@ module.exports = {
     needsApiKey: false,
     keychainAccount: null,
     defaultEndpoint: 'http://localhost:1234/v1',
-    supportsTools: false,  // model-dependent locally; enable per-model when verified
+    supportsTools: true,   // beta-provider: same loop as Ollama — models without tool support never emit tool_calls, so behavior degrades gracefully
     models: [
       { id: 'local-model', name: 'LM Studio · local-model (example)' },
     ],
