@@ -119,6 +119,7 @@ For readers who know VapourSynth, this is what the beta runs:
 
 - **VapourSynth R79** and its own Python, both embedded in the plugin.
 - **QTGMC as a built-in step.** It has its own panel with preset, field order, output rate and input type, plus advanced controls for sharpening, source matching and noise handling. Underneath it calls havsfunc's QTGMC, with mvtools and nnedi3 bundled.
+- **A curated set of 56 filter plugins** ships in the bundle, each with its own notices (see the [notices index](docs/notices-index.md)).
 - **BM3D denoising on the GPU.** BM3D runs through Apple's Metal. In our test on a 1440×1080 ProRes clip it was about 3.5 times faster than the CPU version. Decoding and most other filters run on the CPU for now. See the [measurements](docs/acceleration-notes.md).
 
 **GPU VapourSynth is next.** VapourSynth added GPU support to its core in R80, and R82 already builds in this repository. The beta stays on R79 because R80 dropped the older plugin interface that many of the bundled filters still use. The move to R82 follows once those filters are updated. See the [upgrade notes](docs/vs-r82-upgrade-2026-11-12.md).
@@ -150,7 +151,7 @@ A few things worth knowing:
 - **Mix** on the node blends the filtered result with the original.
 - **Manual Order** lets you arrange the steps yourself instead of using the automatic order.
 - **Recipes** saves a chain so you can reuse it on other clips.
-- **Render queue** encodes a node's chain to a ProRes 422 HQ or FFV1 file from the app, without rendering in Resolve.
+- **Render queue** encodes a node's chain to a ProRes 422 HQ, FFV1, or H.264 file from the app, without rendering in Resolve.
 - **Source file.** Restoration filters work best when they read the original media file. If the app does not pick it up by itself, click **Identify source…** or drop the file in from Finder.
 - **Script steps run real Python on your Mac.** They only run once you approve them, so read a script before you approve it, including anything a recipe or Skippy proposes.
 
