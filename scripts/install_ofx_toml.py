@@ -338,7 +338,12 @@ def main() -> int:
     print(f"library: {py_lib}")
 
     try:
-        planned = update_registration(toml_path, key, [str(py_exe), str(py_lib)],
+        # R79+ VSScript validates a THIRD quoted element against the python
+        # executable's mtime; a stale or absent value silently rejects the
+        # entry ("Python executable and library path couldn't be determined").
+        planned = update_registration(toml_path, key,
+                                      [str(py_exe), str(py_lib),
+                                       str(int(py_exe.stat().st_mtime))],
                                       dry_run=dry_run, lock_timeout=lock_timeout)
     except (ValueError, UnicodeError) as error:
         return die(f"cannot update TOML safely: {error}")

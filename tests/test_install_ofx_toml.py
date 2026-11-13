@@ -41,7 +41,8 @@ class TomlInstallerTests(unittest.TestCase):
         bundle = (bundle or self.bundle).resolve()
         version = bundle / "Contents/Frameworks/Python.framework/Versions/3.14"
         return str(bundle / "Contents/Libraries/libvsscript.dylib"), [
-            str(version / "bin/python3.14"), str(version / "Python")]
+            str(version / "bin/python3.14"), str(version / "Python"),
+            str(int((version / "bin/python3.14").stat().st_mtime))]
 
     def existing(self, text):
         self.toml.parent.mkdir(parents=True, exist_ok=True)

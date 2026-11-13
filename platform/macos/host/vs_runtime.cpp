@@ -4,6 +4,7 @@
 #include "../../../common/marshal/marshal.h"
 
 #include <dlfcn.h>      // dlsym(RTLD_DEFAULT, ...) for Python state diagnostics
+#include <sys/stat.h>   // stat() for the VSScript toml mtime element
 
 #include <cstdio>
 #include <cstdlib>
@@ -99,9 +100,22 @@ void ensure_vsscript_python_config() {
     const char* home = std::getenv("HOME");
     if (!home || !*home) return;
     std::filesystem::path toml = std::filesystem::path(home) / ".config" / "vapoursynth" / "vapoursynth.toml";
-    // Idempotent: an existing line keyed by this lib path means done. The
-    // comparison mirrors VSScript's own parser (first quoted string).
+    // MTIME BINDING (R79+ parser, found live 2026-11-12): VSScript validates
+    // a THIRD quoted tuple element against stat(exe).st_mtime; an entry
+    // without it — or with a stale value — is silently rejected, surfacing
+    // as "VSScript init failed: Python executable and library path couldn't
+    // be determined". The old 2-element write + "key present means done"
+    // idempotency left the beta un-initializable in Resolve (the alpha-era
+    // entry was keyed the same way and never refreshed). Rewrite the keyed
+    // line whenever it is missing or stale; preserve every other line
+    // verbatim. Identical content => no write (idempotent).
+    struct stat exe_stat = {};
+    if (::stat(exe.c_str(), &exe_stat) != 0) return;
     const std::string key = "\"" + lib.string() + "\"";
+    const std::string new_line = key + " = [\"" + exe.string() + "\",\"" + dylib.string()
+        + "\",\"" + std::to_string(static_cast<long long>(exe_stat.st_mtime)) + "\"]";
+    std::string body;
+    bool replaced = false, changed = false;
     {
         std::ifstream in(toml);
         std::string line;
@@ -109,20 +123,37 @@ void ensure_vsscript_python_config() {
             const auto q = line.find('"');
             const auto qe = q == std::string::npos ? q : line.find('"', q + 1);
             if (q != std::string::npos && qe != std::string::npos &&
-                line.substr(q, qe - q + 1) == key)
-                return;
+                line.substr(q, qe - q + 1) == key) {
+                replaced = true;
+                if (line != new_line) changed = true;
+                body += new_line + "\n";
+            } else {
+                body += line + "\n";
+            }
         }
     }
+    if (!replaced) { body += new_line + "\n"; changed = true; }
+    if (!changed) return;
     std::filesystem::create_directories(toml.parent_path(), ec);
-    std::ofstream out(toml, std::ios::app);
-    if (!out.is_open()) {
-        log::warn("vs_runtime", "cannot self-register VSScript python config: " + toml.string());
+    std::filesystem::path tmp = toml;
+    tmp += ".tmp";
+    {
+        std::ofstream out(tmp, std::ios::trunc);
+        if (!out.is_open()) {
+            log::warn("vs_runtime", "cannot self-register VSScript python config: " + toml.string());
+            return;
+        }
+        out << body;
+        out.close();
+    }
+    std::error_code rec;
+    std::filesystem::rename(tmp, toml, rec);
+    if (rec) {
+        log::warn("vs_runtime", "cannot replace VSScript python config: " + toml.string());
         return;
     }
-    out << key << " = [\"" << exe.string() << "\",\"" << dylib.string() << "\"]\n";
-    out.close();
     log::info("vs_runtime", "self-registered VSScript python config for portable bundle: "
-        + lib.string() + " -> python " + pyver);
+        + lib.string() + " -> python " + (pyver.empty() ? exe.string() : pyver));
 
     // SECOND HALF of the portable-bundle fix (live Resolve 2026-10-30: after
     // the toml entry, init failed at "Failed to import the VapourSynth

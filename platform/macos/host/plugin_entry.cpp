@@ -231,8 +231,53 @@ private:
     void schedule_auto_apply(const std::shared_ptr<vsres::macos::PopoutSession>& session) {
         const int pid = session->child_pid();
         if (pid <= 0) {
-            vsres::log::info("host", "no companion PID (shipped launch or launch "
-                                     "unconfirmed) — auto-apply stays manual via Apply companion changes");
+            // SHIPPED LAUNCH (NSWorkspace gives no PID; child_pid stays 0):
+            // the exit observer above can never arm, and the manual Apply
+            // button was removed — live gap found 2026-11-12: "Save and close
+            // applies automatically" never fired for the shipped app, so a
+            // saved chain sat in the exchange while the node rendered
+            // passthrough. Poll the private exchange result instead and apply
+            // the FIRST ready revision (the companion writes result.json on
+            // save-and-close). One apply per Configure generation; a refusal
+            // is surfaced by apply_popout_result and recovered via the next
+            // Configure press, exactly like the dev path.
+            __block dispatch_source_t timer_ref = nullptr;
+            __block bool satisfied = false;
+            dispatch_source_t timer = dispatch_source_create(
+                DISPATCH_SOURCE_TYPE_TIMER, 0, 0,
+                dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0));
+            if (!timer) return;
+            timer_ref = timer;
+            const uint64_t id = instance_id_;
+            dispatch_source_set_timer(timer,
+                dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC),
+                2 * NSEC_PER_SEC, 500 * NSEC_PER_MSEC);
+            dispatch_source_set_event_handler(timer, ^{
+                // Worker-queue context: probe off-main; marshal only on Ready.
+                std::string probe, probe_error;
+                uint64_t probe_revision = 0;
+                const auto state = session->read_result(probe, probe_revision, probe_error);
+                if (state != vsres::macos::PopoutSession::ResultState::Ready) return;
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    if (satisfied) return;
+                    VapourSynthPlugin* self = nullptr;
+                    {
+                        std::lock_guard<std::mutex> lock(live_registry_mutex());
+                        auto& live = live_instances();
+                        const auto it = live.find(id);
+                        if (it != live.end()) self = it->second;
+                    }
+                    if (!self) return;   // instance torn down; nothing to apply
+                    satisfied = true;
+                    if (timer_ref) dispatch_source_cancel(timer_ref);
+                    self->auto_apply_from_session(session);
+                });
+            });
+            dispatch_retain(timer);
+            exit_watchers_.push_back(timer);
+            dispatch_resume(timer);
+            vsres::log::info("host", "shipped companion — watching the exchange "
+                                     "for a saved revision to auto-apply");
             return;
         }
         dispatch_source_t watcher = dispatch_source_create(
@@ -279,7 +324,7 @@ private:
             if (!error.empty()) error_param_->setValue(error);
             return;
         }
-        vsres::log::info("host", "companion exited — auto-applying saved revision "
+        vsres::log::info("host", "auto-applying companion-saved revision "
                                  + std::to_string(revision));
         apply_popout_result(result, session, revision);
     }
@@ -1675,6 +1720,25 @@ namespace Plugin {
 static void ensure_vs_plugin_path() {
     const char* home = std::getenv("HOME");
     if (!home || !*home) return;
+    // PORTABLE BUNDLE STAND-DOWN (beta.1 fix, 2026-11-12): when THIS bundle
+    // stages its own curated plugin set (Contents/Plugins), the bundle must
+    // win. Pre-setting the USER dir here made vs_runtime's override guard
+    // (correctly) refuse to load the staged set — live fallout: Resolve
+    // sessions evaluated chains against machine-specific plugins instead of
+    // the shipped, audited ones. Dev trees without Contents/Plugins keep the
+    // legacy behavior (user-dir symlinks stay discoverable).
+    {
+        Dl_info info = {};
+        if (dladdr(reinterpret_cast<void*>(&ensure_vs_plugin_path), &info) && info.dli_fname) {
+            std::filesystem::path exe_dir = std::filesystem::path(info.dli_fname).parent_path();
+            std::error_code ec;
+            if (std::filesystem::is_directory(exe_dir.parent_path() / "Plugins", ec)) {
+                vsres::log::info("host",
+                    "portable bundle stages its own plugins — user-dir path shim stood down");
+                return;
+            }
+        }
+    }
     std::string user_plugins = std::string(home) + "/Library/Application Support/VapourSynth/Plugins";
     setenv("VAPOURSYNTH_EXTRA_PLUGIN_PATH", user_plugins.c_str(), 0);
 }

@@ -87,9 +87,20 @@ case "$OUT1" in
   *) echo "FAIL: expected the path-determination error without an entry"; exit 1;;
 esac
 
-echo "── 2. WITH the self-registered toml entry + staged bundle .pth ──"
+echo "── 1b. WITH a stale 2-element entry (R79 must REJECT it — regression) ──"
 printf '"%s" = ["%s/bin/python3.14","%s/Python"]\n' "$LIB" "$FW/$PYVER" "$FW/$PYVER" \
-  >> "$TMP/home/.config/vapoursynth/vapoursynth.toml"
+  > "$TMP/home/.config/vapoursynth/vapoursynth.toml"
+OUT1B="$(env -i HOME="$TMP/home" PATH=/usr/bin:/bin "$TMP/probe" "$LIB" "$PYLIB")"
+echo "$OUT1B"
+case "$OUT1B" in
+  *"couldn't be determined"*) echo "PASS (2-element entry rejected — mtime element is required)";;
+  *) echo "FAIL: a 2-element entry must not initialize on R79"; exit 1;;
+esac
+
+echo "── 2. WITH the mtime-bound 3-element toml entry + staged bundle .pth ──"
+printf '"%s" = ["%s/bin/python3.14","%s/Python","%s"]\n' "$LIB" "$FW/$PYVER" "$FW/$PYVER" \
+  "$(stat -f %m "$FW/$PYVER/bin/python3.14")" \
+  > "$TMP/home/.config/vapoursynth/vapoursynth.toml"
 OUT2="$(env -i HOME="$TMP/home" PATH=/usr/bin:/bin "$TMP/probe" "$LIB" "$PYLIB")"
 echo "$OUT2"
 case "$OUT2" in

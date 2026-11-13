@@ -71,6 +71,19 @@ which verifies the bundle's signature before touching
   build; the test runner no longer breaks under asdf shims; a dormant
   pix_fmt bug that would have failed any YUV-output queue render was found
   and fixed before release.
+- **Live-smoke fixes (all caught on a real Resolve session, all
+  regression-tested).** (1) VSScript runtime binding: R79 validates the
+  Python-discovery entry's mtime — our writer predated that format and
+  stale entries were skipped instead of refreshed. (2) The namespace probe
+  behind the Configure filter list resolved a helper-only folder instead of
+  the shipped runtime, and it appended to a single-path variable that the
+  plugin inherits inside Resolve — either way the list could degrade to the
+  two always-available steps. (3) The companion-save auto-apply only ever
+  armed for dev launches; for the installed app a saved chain had no apply
+  trigger and nodes rendered passthrough. All three are fixed; the full
+  loop — Configure → edit → save-and-close → chain applies → frames
+  evaluate — is verified live, including the window-rule emission in the
+  composed script.
 
 Carried from alpha.0 (unchanged): the security model below, the correctness
 fixes C01–C15, live-resolve qualification, and the notarization pipeline.
