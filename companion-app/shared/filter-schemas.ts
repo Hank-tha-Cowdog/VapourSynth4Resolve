@@ -183,11 +183,11 @@ export const FILTER_SCHEMAS: Record<string, FilterSchema> = {
         emit: (p) =>
             '# Temporal-only denoise: averages similar frames, preserves grain.\n' +
             '# maxr: temporal radius (frames); thresh: per-plane blend threshold.\n' +
-            `clip = core.ttmpsm.TTempSmooth(clip, maxr=${num(p, 'maxr', 3)}, thresh=[${num(p, 'thresh', 6)}, ${num(p, 'thresh', 6)}, ${num(p, 'thresh', 6)}])\n`,
+            `clip = core.zsmooth.TTempSmooth(clip, maxr=${num(p, 'maxr', 3)}, thresh=[${num(p, 'thresh', 6)}, ${num(p, 'thresh', 6)}, ${num(p, 'thresh', 6)}])\n`,
         template: () =>
             '# Temporal-only denoise: averages similar frames, preserves grain.\n' +
             '# maxr: temporal radius (frames); thresh: per-plane blend threshold.\n' +
-            'clip = core.ttmpsm.TTempSmooth(clip, maxr=3, thresh=[6, 6, 6])\n',
+            'clip = core.zsmooth.TTempSmooth(clip, maxr=3, thresh=[6, 6, 6])\n',
     },
     ttmpsm_flicker: {
         type: 'ttmpsm_flicker', label: 'Flicker Fix — Temporal',
@@ -204,11 +204,11 @@ export const FILTER_SCHEMAS: Record<string, FilterSchema> = {
         emit: (p) =>
             '# TTempSmooth: temporal averaging of SIMILAR frames only (gates motion).\n' +
             '# maxr = temporal radius; thresh = blend gate; use on locked-off/shaky-free shots.\n' +
-            `clip = core.ttmpsm.TTempSmooth(clip, maxr=${num(p, 'maxr', 3)}, thresh=[${num(p, 'thresh', 12)}, ${num(p, 'thresh', 12)}, ${num(p, 'thresh', 12)}], mdiff=[${num(p, 'mdiff', 64)}, ${num(p, 'mdiff', 64)}, ${num(p, 'mdiff', 64)}])\n`,
+            `clip = core.zsmooth.TTempSmooth(clip, maxr=${num(p, 'maxr', 3)}, thresh=[${num(p, 'thresh', 12)}, ${num(p, 'thresh', 12)}, ${num(p, 'thresh', 12)}], mdiff=[${num(p, 'mdiff', 64)}, ${num(p, 'mdiff', 64)}, ${num(p, 'mdiff', 64)}])\n`,
         template: () =>
             '# TTempSmooth: temporal averaging of SIMILAR frames only (gates motion).\n' +
             '# maxr = temporal radius; thresh = blend gate; use on locked-off/shaky-free shots.\n' +
-            'clip = core.ttmpsm.TTempSmooth(clip, maxr=3, thresh=[12, 12, 12], mdiff=[64, 64, 64])\n',
+            'clip = core.zsmooth.TTempSmooth(clip, maxr=3, thresh=[12, 12, 12], mdiff=[64, 64, 64])\n',
     },
     deblock: {
         type: 'deblock', label: 'Deblock',

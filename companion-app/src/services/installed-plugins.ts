@@ -80,7 +80,7 @@ export const INSTALLED_PLUGINS: { group: string; plugins: PluginInfo[] }[] = [
             { namespace: 'wnnm',     purpose: 'WNNM — weighted nuclear norm denoise (very slow, very high quality)' },
             { namespace: 'nlm_ispc', purpose: 'Non-local means via ISPC' },
             { namespace: 'smoothuv', purpose: 'SmoothUV — chroma denoiser' },
-            { namespace: 'zsmooth',  purpose: 'ZSmooth — fast spatial smoother' },
+            { namespace: 'zsmooth',  purpose: 'ZSmooth — TTempSmooth successor; temporal/spatial smoothing' },
             { namespace: 'bilateral', purpose: 'Bilateral filter' },
             { namespace: 'ctmf',     purpose: 'Constant-time median filter' },
         ],

@@ -84,12 +84,12 @@ export const FILTER_LIBRARY: LibraryEntry[] = [
       ].join('\n') },
 
         { type: 'script', label: 'Temporal Denoise', stage: 'denoise', availability: 'verified', schemaType: 'ttmpsm',
-      requires: ['ttmpsm'],
-      description: 'core.ttmpsm.TTempSmooth — temporal-only smoother for low-motion sources.',
+      requires: ['zsmooth'],
+      description: 'core.zsmooth.TTempSmooth — temporal-only smoother for low-motion sources.',
       template: [
         '# Temporal-only denoise: averages similar frames, preserves grain.',
         '# maxr: temporal radius (frames); thresh: per-plane blend threshold.',
-        'clip = core.ttmpsm.TTempSmooth(clip, maxr=3, thresh=[6, 6, 6])',
+        'clip = core.zsmooth.TTempSmooth(clip, maxr=3, thresh=[6, 6, 6])',
       ].join('\n') },
 
         { type: 'script', label: 'Deblock', stage: 'restore', availability: 'verified', schemaType: 'deblock',
@@ -149,13 +149,13 @@ export const FILTER_LIBRARY: LibraryEntry[] = [
       ].join('\n') },
 
         { type: 'script', label: 'Flicker Fix — Temporal', stage: 'denoise', availability: 'verified', schemaType: 'ttmpsm_flicker',
-      requires: ['ttmpsm'],
-      description: 'core.ttmpsm.TTempSmooth — gate-thresholded temporal smoother for STATIC-camera '
+      requires: ['zsmooth'],
+      description: 'core.zsmooth.TTempSmooth — gate-thresholded temporal smoother for STATIC-camera '
         + 'flicker (gates motion; verified on the static-flicker fixture).',
       template: [
         '# TTempSmooth: temporal averaging of SIMILAR frames only (gates motion).',
         '# maxr = temporal radius; thresh = blend gate; use on locked-off/shaky-free shots.',
-        'clip = core.ttmpsm.TTempSmooth(clip, maxr=3, thresh=[12, 12, 12], mdiff=[64, 64, 64])',
+        'clip = core.zsmooth.TTempSmooth(clip, maxr=3, thresh=[12, 12, 12], mdiff=[64, 64, 64])',
       ].join('\n') },
 
         { type: 'script', label: 'Ghost Removal', stage: 'restore', availability: 'verified', schemaType: 'lghost',
