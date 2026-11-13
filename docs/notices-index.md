@@ -36,7 +36,7 @@ complete kit; rows marked **OPEN** are tracked for the next distribution gate.
 | onnxruntime 1.23.2 (+ support dylibs) | MIT core + version-specific third-party notices | **OPEN**: bind origin/build; per-dylib verification before distribution |
 | FFmpeg/ffprobe (recipient kit route) | GPL (ffprobe) | Recipient-build kit documented separately (`docs/ffprobe-recipient-build-draft.md`); **OPEN**: final terms per owner |
 | FFmpeg encoder helper (render-queue runtime, LGPL-only build) | LGPL-2.1-or-later (configure-verified: GPL/nonfree/version3 disabled) | Recipient rebuild recipe + manifest under `licenses/ffmpeg-encoder/`; draft `docs/ffmpeg-encoder-recipient-build-draft.md`; **OPEN**: final terms per owner |
-| Curated VS plugin dylibs (63 staged for install) | per-component — see SBOM + review §"component inventory" | **OPEN (rights map)**: several GPLv2-vs-GPLv3 conflicts (mvtools file notices; FFT3DFilter wording; sangnom dual statements; RGSF/RemoveGrain scope; havsfunc.py whole-file provenance). Distribution-gated — do not ship unqualified copies |
+| Curated VS plugin dylibs (63 staged for install) | per-component — see SBOM + review §"component inventory" | **PARTIALLY RESOLVED 2026-11-13**: havsfunc.py re-vendored (Unlicense @pin) and the mvsfunc/nnedi3_resample grant gaps closed by replacement/removal — see `docs/vs-helpers-revendor-2026-11-13.md`. Still open: mvtools file notices; FFT3DFilter wording; sangnom dual statements; RGSF/RemoveGrain scope |
 | libgsl.28 | GPL GSL | Pruning candidate — prove unnecessary in final closure or supply source+notices |
 | Boost (filesystem/atomic), libc++ | Boost / LLVM | Bind versions/notices for included copies; prefer system libc++ where valid |
 

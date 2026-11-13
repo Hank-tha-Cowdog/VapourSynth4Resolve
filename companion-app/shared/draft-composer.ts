@@ -296,7 +296,7 @@ import vapoursynth as vs
 core = vs.core
 import havsfunc
 havs = havsfunc
-import mvsfunc as mvf
+import vsres_conv as mvf
 import adjust
 try:
     import nnedi3_resample

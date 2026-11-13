@@ -342,7 +342,9 @@ std::string compose_script(const Chain& chain, const StepContext& ctx, ComposeSt
     py << "import havsfunc\n";        // QTGMC, srestore, deinterlacing recipes
     py << "havs = havsfunc\n";        // alias — docs + Archivist + native nodes write `havs.QTGMC(...)`;
                                       // without this line those scripts die with "name 'havs' is not defined"
-    py << "import mvsfunc as mvf\n";  // Depth, ToRGB, ToYUV — color-space + bit-depth helpers
+    py << "import vsres_conv as mvf\n";  // Depth, ToRGB, ToYUV — the licensed
+    // replacement layer (vendor/vs-helpers/vsres_conv.py, MIT; alias kept
+    // for call-site stability). mvsfunc is no longer shipped (2026-11-13).
     py << "import adjust\n";          // Tweak — gamma / hue / saturation tweaks (used by some QTGMC variants)
     py << "try:\n    import nnedi3_resample\nexcept ImportError:\n    nnedi3_resample = None\n";
     // CORRECTNESS (2026-11-05, correctness review C08): the draft preamble has a guarded

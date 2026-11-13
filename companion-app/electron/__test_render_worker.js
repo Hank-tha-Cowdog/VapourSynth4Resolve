@@ -83,7 +83,7 @@ test('IDENTITY: source-derived RGB == conversion-only chain RGB (like-for-like)'
     const SRC = 'import vapoursynth as vs\ncore = vs.core\n'
         + 'src = core.std.BlankClip(width=320, height=240, length=25, fpsnum=25, fpsden=1, '
         + 'format=vs.YUV422P10, color=[412, 512, 512])\nclip = src\nclip.set_output()\n';
-    const CHAIN = 'import vapoursynth as vs\nimport mvsfunc as mvf\ncore = vs.core\n'
+    const CHAIN = 'import vapoursynth as vs\nimport vsres_conv as mvf\ncore = vs.core\n'
         + 'src = core.std.BlankClip(width=320, height=240, length=25, fpsnum=25, fpsden=1, '
         + 'format=vs.YUV422P10, color=[412, 512, 512])\n'
         + 'clip = mvf.ToRGB(src, depth=32, matrix=\'709\')\n'

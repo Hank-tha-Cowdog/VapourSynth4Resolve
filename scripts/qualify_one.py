@@ -21,7 +21,10 @@ sys.path.insert(0, os.path.join(REPO, "vendor", "vapoursynth", "active",
                                 "lib", "python3.14", "site-packages"))
 
 import vapoursynth as vs  # noqa: E402
-import mvsfunc as mvf   # noqa: E402
+try:
+    import vsres_conv as mvf
+except ImportError:  # legacy bundles without the replacement layer
+    import mvsfunc as mvf  # noqa: E402
 import adjust            # noqa: E402  (PYTHON helper — the native core.adjust
                          #  plugin hard-aborts the process on YUV422P10;
                          #  the helper is the safe path)

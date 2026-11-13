@@ -17,7 +17,7 @@ marked [read]; unresolved questions are explicit and must not be assumed resolve
 
 ### Our code
 - Native OFX plugin + common (composer, filters): **GPLv3** [read: root `LICENSE`]. GPL/commercial-host question tracked as distribution gate 2 (see `notices-index.md`).
-- Companion app (renderer+main): **MIT** [read: `companion-app/LICENSE`, added this pass materializing `package.json "license": "MIT"`]. Fork attribution: VapourSage (github.com/Hank-tha-Cowdog/vapoursage). **FINDING [read: GitHub API, 2026-10-28]: the upstream vapoursage repo is PRIVATE and carries NO license file.** A derivative-of-private-unlicensed-code MIT declaration is NOT something this repo can grant itself → **Q1 is now a genuine legal decision for the owner**: obtain an upstream grant from Hank-tha-Cowdog, confirm the retained portions are independently authored/rewritten, or re-license the companion. Evidence complete; decision pending.
+- Companion app (renderer+main): **MIT** [read: `companion-app/LICENSE`, added this pass materializing `package.json "license": "MIT"`]. Fork attribution: VapourSage (github.com/Hank-tha-Cowdog/vapoursage). **Q1 RESOLVED 2026-11-13**: the upstream repository now carries an explicit MIT `LICENSE` and a README grant note (upstream commits `8d0c4f9c`, `d80f3fdb`) — the companion's MIT declaration is backed by the upstream grant from the same copyright holder; see `docs/authorship-record-2026-11-13.md`. (Original finding, kept for history: [read: GitHub API, 2026-10-28] the upstream was PRIVATE with NO license file, which made the grant a genuine owner decision.)
 
 ### VapourSynth core runtime (bundled)
 - `libvapoursynth.4.dylib`, `libvsscript.dylib`: **VapourSynth R82**, LGPL-2.1-or-later [read: `vendor/vapoursynth/src-R82/COPYING.LESSER`]. LGPL relocation/source obligations apply to redistribution of these dylibs.
@@ -73,7 +73,11 @@ existing installs / vendor tree):
 - The vendored dylibs required an **rpath repair** (`@rpath/libc++.1.0.dylib` → `/usr/lib/libc++.1.dylib`) done at user install time by our script; at least one vendor dylib crashes the VS process when loaded (curated out). This is a binary-quality signal for the review.
 
 ### Python helper scripts (bundled in `vs-python`, also `~/…/VapourSynth-OFX/vs-python`)
-- `havsfunc.py`: retained source/notice evidence identifies **function-local
+- (2026-11-13 SUPERSEDED — see `docs/vs-helpers-revendor-2026-11-13.md`:
+  `havsfunc.py` was re-vendored from the **Unlicense** upstream @`40009447073c`
+  with one documented patch; `mvsfunc.py` / `nnedi3_resample.py` are no longer
+  shipped; `vsutil` (MIT) added; `vsres_conv.py` is our own MIT replacement.)
+- `havsfunc.py` (historical record): retained source/notice evidence identifies **function-local
   WTFPL comments**, not a whole-file license assignment. The historical
   2026-10-28 upstream API Unlicense declaration does not bind an exact upstream
   revision or grant to the bundled file. **Q5a remains open** for whole-file

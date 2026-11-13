@@ -166,10 +166,24 @@ if(VSRES_PORTABLE_BUNDLE)
         COMMAND ${CMAKE_COMMAND} -E copy ${VS_SP}/libvapoursynth.4.dylib ${PORTABLE_LIBS}/libvapoursynth.4.dylib
         COMMAND ${CMAKE_COMMAND} -E make_directory ${PORTABLE_RES}/vs-python
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${VS_SP} ${PORTABLE_RES}/vs-python/vapoursynth
-        # Helper scripts are user-installed (not in the vendor prefix); embed
-        # best-effort so chains import from the bundle, not the user path.
+        # Helper scripts: staged from the IN-REPO license-cleared set
+        # (vendor/vs-helpers) — havsfunc.py @ pinned Unlicense revision,
+        # vsres_conv.py = our MIT replacement for mvsfunc, adjust.py = WTFPL.
+        # mvsfunc / nnedi3_resample are deliberately NOT staged
+        # (rights-map Conflict 6 resolution, 2026-11-13).
+        COMMAND ${CMAKE_COMMAND} -E copy
+            "${CMAKE_SOURCE_DIR}/vendor/vs-helpers/havsfunc.py"
+            ${PORTABLE_RES}/vs-python/havsfunc.py
+        COMMAND ${CMAKE_COMMAND} -E copy
+            "${CMAKE_SOURCE_DIR}/platform/macos/vs-helpers/vsres_conv.py"
+            ${PORTABLE_RES}/vs-python/vsres_conv.py
+        COMMAND ${CMAKE_COMMAND} -E copy
+            "${CMAKE_SOURCE_DIR}/vendor/vs-helpers/adjust.py"
+            ${PORTABLE_RES}/vs-python/adjust.py
+        # vsutil (MIT) — the licensed upstream havsfunc imports it.
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${VSRES_VS_HELPERS}" ${PORTABLE_RES}/vs-python
+            "${CMAKE_SOURCE_DIR}/vendor/vs-helpers/vsutil"
+            ${PORTABLE_RES}/vs-python/vsutil
         COMMAND ${CMAKE_COMMAND} -E make_directory ${PORTABLE_FRW}
         COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${VSRES_PYTHON_FRAMEWORK}" ${PORTABLE_FRW}/Python.framework

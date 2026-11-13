@@ -52,14 +52,20 @@ def bench(name, build, frames=(10, 60, 110)):
 # processed via to_rgb float, sigma 3.0 spatial (radius=0).
 def metal():
     clip = src
-    import mvsfunc as mvf
+    try:
+        import vsres_conv as mvf
+    except ImportError:  # legacy bundles without the replacement layer
+        import mvsfunc as mvf
     clip = mvf.ToRGB(clip, depth=32)
     clip = core.bm3dmetal.BM3D(clip, sigma=[3.0, 3.0, 3.0], radius=0)
     return clip
 
 def cpu():
     clip = src
-    import mvsfunc as mvf
+    try:
+        import vsres_conv as mvf
+    except ImportError:  # legacy bundles without the replacement layer
+        import mvsfunc as mvf
     clip = mvf.ToRGB(clip, depth=32)
     clip = core.bm3dcpu.BM3D(clip, sigma=[3.0, 3.0, 3.0], radius=0)
     return clip
@@ -76,7 +82,10 @@ except Exception as e:
 # Baseline: the transfer/decode cost without denoise, for honest
 # attribution (decoding + ToRGB vs the denoise increment).
 def baseline():
-    import mvsfunc as mvf
+    try:
+        import vsres_conv as mvf
+    except ImportError:  # legacy bundles without the replacement layer
+        import mvsfunc as mvf
     return mvf.ToRGB(src, depth=32)
 bench("baseline (decode + ToRGB only)", baseline)
 print("NOTE: per-frame times include decode+convert; the denoise increment is")
