@@ -33,6 +33,28 @@ Deferred (not cut): **knlmeanscl** (OpenCL-only; no successor port attempted
 yet), **lsmashsource** (port done + module-verified; deferred until its
 LGPL libav* kit exists — it currently links Homebrew ffmpeg).
 
+## Continued ports (same wave)
+
+| plugin | source | notes |
+|---|---|---|
+| ctmf | HomeOfVapourSynthEvolution/VapourSynth-CMF (holywu) | standard + pad-format via queryVideoFormat (registerFormat gone); CTMF.h needed the bulk set too |
+| retinex | HomeOfVapourSynthEvolution/VapourSynth-Retinex | 2 filters (MSRCP/MSRCR) + shared header classes; see the divergence investigation below |
+
+### retinex: shipped binary != upstream source (investigation record)
+
+The port diverged from the SHIPPED collection build on both explicit-sigma and
+default-sigma tests. Investigation:
+1. Built the ORIGINAL V3 source fresh → dataset-identical to MY PORT
+   (bit-exact, same hash under R79 and R82 cores).
+2. Built the pre-2021 upstream revision (f7abea5) → same result.
+3. fast-math / FLType / sigma-append hypotheses: all exonerated.
+
+Conclusion: the vendor's shipped libretinex was built from an UNIDENTIFIED
+variant (fork/patch) — not from either upstream revision. Our R82 build is
+upstream-exact (the migration's target); the shipped variant's behavior is
+the vendor's and not reproducible from public sources. Recorded, accepted,
+not matched.
+
 ## Remaining port queue (inventory-only but kept for set parity)
 
 ctmf, retinex, tdeintmod, rgsf, fftspectrum (its SSE kernels need the

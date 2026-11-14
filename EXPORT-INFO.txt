@@ -3,4 +3,4 @@ Scope: allowlisted project source only — no Git history, no build
 outputs, no vendor binaries, no client/private material. Third-party
 components are NOT included; their notices and source duties are
 tracked in docs/notices-index.md (owner rights-map decisions open).
-Files: 612  Bytes: 6871789
+Files: 612  Bytes: 6872934
