@@ -90,6 +90,9 @@ Classification of every remaining candidate upstream source:
   - `smoothuv` — **PORTED + BIT-EXACT** vs the shipped collection build
     (native VS4 + C kernels replicating the SSE2 arithmetic). Port + notes:
     `r82-testset/vapoursynth-smoothuv/` (PATCHES.md).
+  - **R82 TEST BUNDLE STAGED (2026-11-13):** 39 plugins (23 native API-4 +
+    16 replacements + znedi3), audit PASS, chain render byte-identical to the
+    R79 shipped bundle. Notes: `r82-test-bundle-notes.md`.
   - `tcomb` — **PORTED + BIT-EXACT** vs the shipped build; includes the R82
     `std.Cache`-removal fix (passthrough semantics; R79 already deprecated it).
     Port + notes: `r82-testset/vapoursynth-tcomb/` (PATCHES.md).

@@ -504,13 +504,14 @@ b06e6eb6d3ec790f16cb0827c3867bb2acaf20f38f8fe58eb403a6110384c0dc  docs/r82-migra
 ec1a92b19b43064cb31f2571c418fbf84c87ee2d3459e81eed808d4a94861253  docs/r82-migration-2026-11-13/deblock-REVENDOR.md
 c66ea5767807cc289755065dd6c6008664d85eb6dfc1e868ea765b3b9a43ed71  docs/r82-migration-2026-11-13/dfttest-PATCHES.md
 5afa3cc1a1c46a7655b1ed875147dac46687a3b5ee76d11978168fe5353ae012  docs/r82-migration-2026-11-13/lghost-PATCHES.md
-be1a68c0c5123014e9ea247fa6aad81dd18165c31e669ff7f5ba07e7adf83660  docs/r82-migration-2026-11-13/migration-manifest.md
+a03b9f960f2a5473110f32d0e46740133722d7a6ed21863f51e1313c6d982d00  docs/r82-migration-2026-11-13/migration-manifest.md
 4d5b03f4dbfc81b23819464d51c737e39cab8d82f62acb95300db63a4e4cc586  docs/r82-migration-2026-11-13/patch-rdvs.py
 2e0011b15200a53761fe207d62a442288a751f44e3a40578ca10012031ab6bdc  docs/r82-migration-2026-11-13/patch-wnnm.py
 20915028619a5579377c2352b0382f3eb87610f9d14097ab6614981b872c370b  docs/r82-migration-2026-11-13/patch-wrapper.py
-8c82667ff5bc93a5db99bb236310065b89070d9ca065066d84f52b62e50670ff  docs/r82-migration-2026-11-13/smoothuv-PATCHES.md
+cd3b52471e2deecd38dd7e6a6b519e69a5ff7d813a62e65499096541a24374f4  docs/r82-migration-2026-11-13/r82-test-bundle-notes.md
+6df636dda59f958707d2decf9850e004a7b1123ee85e2b8e6b43e530fa3c2fb1  docs/r82-migration-2026-11-13/smoothuv-PATCHES.md
 be465dc82c742a1d7ec8855b9b5ea2cdc9274f666ab03806b98963f6e5ee5f01  docs/r82-migration-2026-11-13/tcomb-PATCHES.md
-0699e9a3cd5bbedfcc311920b97cf661617158759f35fc03a221b731458c47d9  docs/r82-migration-2026-11-13/testset-README.md
+4ddfc0255d523b86e07f5e7d463917eaf6b11b5a8f3e7ee8b860f128051aef97  docs/r82-migration-2026-11-13/testset-README.md
 118142dc97b52592523ebc455b1f9228cf1eae122c77afb06c0fd2246a359551  docs/release-notes-2.0.0-alpha.0.md
 59e097ffffb21fb5e08ddb527c0a571360730b000808153cb6f7ac024d5f4e39  docs/release-notes-2.0.0-beta.1.md
 4a5e9652849b8dd067bb33824f678d2275b4491da9364de386546eecafe2990a  docs/release-notes-2.0.0-beta.2.md
@@ -569,6 +570,7 @@ fb69c9d3032ff5ce2feb6c9e4856e62526703abf426ab5c9293aee87bb6a61ed  scripts/qualif
 e4e700069245058267e2fbda8e431d0a6e5fa3461c7e968e9b5af7f9eec486e8  scripts/rebuild_ffprobe.py
 a23920def731c874670740a257eabf7554d43dc02a6d8397f6bb0983b91c4212  scripts/release/deploy_testbed.sh
 907c31079f0a5c552fcb10bb3bcfee55e5cd48a2f93366e8974f5cb147e5bcb4  scripts/release/export_source.py
+7da9b6595d85d69ff09b0ed7ff912f33ca59ddc6ebf400776807925127c34bb0  scripts/release/publish_public.sh
 601ada27df5c7c44948f9b0be1d7545780b49563d2b95f91dcb694f89269debc  scripts/release/resign_release.sh
 95d92de57c5642a6fcd96ecd0038743ab6743febafe9f80975aeea94ad5fba36  scripts/render_chain_runner.py
 5947e1820a7f052a589743a03d25120a73be1180816f02daee84f0dd6d1ca082  scripts/render_preview_frame.py

@@ -34,7 +34,7 @@ namespace registers and render one frame.
 | lsmashsource | HomeOfAviSynthPlusEvolution/L-SMASH-Works | cmake (+6-site vanilla-FFmpeg port, see `L-SMASH-Works/PATCHES.md`) | **full render PASS on real media** — `LWLibavSource` → YUV422P10 640×480 from interlaced.mov; source→znedi3 chain 640×960 |
 | temporalsoften2 (focus2) | dubhatervapoursynth/vapoursynth-temporalsoften2 | meson (VS4 port + C kernels; PATCHES.md) | **full render PASS**; 8-bit **bit-exact** vs shipped; parity script `parity-ts.py` |
 | zsmooth (incl. TTempSmooth) | shipped API-4 build | — | **byte-identical to the old ttmpsm** (0 diff) — replaces it via app-side namespace swap |
-| smoothuv | dubhatervapoursynth/vapoursynth-smoothuv | meson (VS4 port + C kernels; PATCHES.md) | **full render PASS + BIT-EXACT vs shipped** (radius 3, chroma pattern) |
+| smoothuv | dubhatervapoursynth/vapoursynth-smoothuv | meson (VS4 port + C kernels; PATCHES.md) | **BIT-EXACT vs shipped** — after fixing a C-kernel lane-offset bug that uniform stripe inputs had masked (see PATCHES.md; verified on gradients + the chain that exposed it) |
 | tcomb | dubhatervapoursynth/vapoursynth-tcomb | meson (VS4 port; upstream C fallbacks; PATCHES.md) | **full render PASS + BIT-EXACT vs shipped**; incl. the R82 std.Cache-removal fix |
 | dfttest | HomeOfVapourSynthEvolution/VapourSynth-DFTTest | meson + fftw3f (VS4 port; upstream C fallbacks; PATCHES.md) | **BIT-EXACT vs shipped** on textured input (gray t1/t3, yuv t3); incl. the queryVideoFormat/#undef'd VS_MAKE_VIDEO_ID + getCoreInfo V4 fixes |
 | neo-f3kdb | HomeOfAviSynthPlusEvolution/neo_f3kdb | cmake (+ wrapper V4 port; PATCHES.md) | **BIT-EXACT vs shipped** on engaged gradient input (range 15/31) |
