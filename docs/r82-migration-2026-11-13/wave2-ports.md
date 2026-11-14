@@ -55,10 +55,23 @@ upstream-exact (the migration's target); the shipped variant's behavior is
 the vendor's and not reproducible from public sources. Recorded, accepted,
 not matched.
 
-## Remaining port queue (inventory-only but kept for set parity)
+## Deferral decisions (inventory-only, recorded 2026-11-13)
 
-ctmf, retinex, tdeintmod, rgsf, fftspectrum (its SSE kernels need the
-sse2neon treatment; niche spectrum visualizer — could also be cut).
+Final three deferred with explicit cost/benefit (all inventory-only — no
+recipe/schema/UI use; consistent with the earlier cut decisions):
+
+- **tdeintmod** — 2,180-line MULTI-STAGE pipeline (internal MM/build stages
+  with mapGetNode(out) chaining, like tcomb) + a second IsCombed function.
+  Deinterlacing is already covered functionally (shipped QTGMC chain +
+  eedi2/znedi3 ports). Port cost high, product value ~zero today.
+- **rgsf** (RGVS Single Precision: Clense/RemoveGrain/Repair/VerticalCleaner
+  in fp32) — 5 files + vendored V3 headers (the removedirtvs pattern); the
+  integer twins (removegrain, etc.) already ship API-4. Deferred.
+- **fftspectrum** — its inline SSE kernels need the sse2neon treatment for a
+  niche spectrum visualizer with no app usage. Deferred.
+
+Each stays in the R79 set until a future wave; the R82 test bundle excludes
+them exactly like the earlier cuts.
 
 ## Usage-analysis method (worth repeating)
 

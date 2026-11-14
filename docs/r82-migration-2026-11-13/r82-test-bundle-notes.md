@@ -1,11 +1,18 @@
 # R82 test bundle — assembly notes (2026-11-13)
 
-First staged R82 OFX bundle: 39 plugins (23 native API-4 + 16 ported/
-re-vendored replacements; znedi3 added as the nnedi3 successor), staged from
-a copy of the R79 staged bundle with the R82 core swapped in. Audit: PASS
-(PATH_POLICY_PASS_NOT_RUNTIME_QUALIFIED, 0 violations). Chain render
-(DFTTest→TComb→SmoothUV→Deblock→neo-f3kdb→zsmooth→znedi3) = byte-identical
-to the R79 shipped bundle on the same script.
+First staged R82 OFX bundle — FINAL state: **46 plugins** (23 native API-4
++ 22 ported/re-vendored replacements + znedi3 as the nnedi3 successor),
+staged from a copy of the R79 staged bundle with the R82 core swapped in.
+Audit: PASS (PATH_POLICY_PASS_NOT_RUNTIME_QUALIFIED, 0 violations) after
+every addition wave. Qualification:
+
+- Regression chain (DFTTest→TComb→SmoothUV→Deblock→neo-f3kdb→zsmooth→znedi3)
+  = byte-identical to the R79 shipped bundle on the same script.
+- Spot renders: eedi2, ctmf, bilateral, retinex, tedgemask, asharp,
+  awarpsharp2 all load and render through the staged bundle's own vspipe.
+
+Wave-2 additions: eedi2, tedgemask, asharp, awarpsharp2, bilateral, ctmf,
+retinex (all recorded in wave2-ports.md).
 
 ## Excluded from the test bundle (17 API-3, pending port/cut)
 asharp, awarpsharp2, bilateral, bm3dcpu (cut candidate), ctmf, dfttest2_gcc,
