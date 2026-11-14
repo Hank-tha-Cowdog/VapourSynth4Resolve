@@ -113,6 +113,10 @@ Classification of every remaining candidate upstream source:
     build on engaged input. Source identified: HomeOfVapourSynthEvolution/
     VapourSynth-Deblock (holywu, com.holywu.deblock; upstream v9.0 is already
     VS4-native). Notes: `r82-testset/VapourSynth-Deblock/` (REVENDOR.md).
+  - **WAVE 2 (2026-11-13):** eedi2, tedgemask, asharp, awarpsharp2, bilateral
+    ported + bit-exact; cuts recorded (nnedi3-superseded, wwxd, it,
+    vsort/vs-mlrt, dfttest2_gcc, bm3dcpu); queue: ctmf, retinex, tdeintmod,
+    rgsf, fftspectrum. Details: `wave2-ports.md`.
   - `dfttest` — **PORTED + BIT-EXACT** vs the shipped build (verified on real
     textured input). R82 API notes: VS_MAKE_VIDEO_ID is #undef'd by the header
     (use queryVideoFormat); getCoreInfo has an out-param in V4.
