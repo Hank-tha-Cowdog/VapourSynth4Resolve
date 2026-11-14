@@ -6,7 +6,7 @@
 </p>
 
 <h3 align="center">
-  <a href="https://github.com/Hank-tha-Cowdog/VapourSynth4Resolve/releases/download/v2.0.0-beta.2/VapourSynth.Companion-2.0.0-beta.2-arm64.dmg">Download for macOS</a> <sup>beta</sup>
+  <a href="https://github.com/Hank-tha-Cowdog/VapourSynth4Resolve/releases/download/v2.0.0-beta.3/VapourSynth.Companion-2.0.0-beta.3-arm64.dmg">Download for macOS</a> <sup>beta</sup>
 </h3>
 
 <p align="center">
@@ -117,18 +117,18 @@ The exact VapourSynth script the node runs, section by section. Nothing is hidde
 
 For readers who know VapourSynth, this is what the beta runs:
 
-- **VapourSynth R79** and its own Python, both embedded in the plugin.
-- **56 filter plugins**, bundled with it. Each keeps its own license notices; see the [notices index](docs/notices-index.md).
-- **QTGMC as a built-in step.** It has its own panel with preset, field order, output rate and input type, plus advanced controls for sharpening, source matching and noise handling. Underneath it calls havsfunc's QTGMC, with mvtools and nnedi3 bundled.
+- **VapourSynth R82** and its own Python, both embedded in the plugin.
+- **47 filter plugins**, bundled with it. Each keeps its own license notices; see the [notices index](docs/notices-index.md).
+- **QTGMC as a built-in step.** It has its own panel with preset, field order, output rate and input type, plus advanced controls for sharpening, source matching and noise handling. Underneath it calls havsfunc's QTGMC, with mvtools and znedi3 bundled.
 - **BM3D denoising on the GPU.** BM3D runs through Apple's Metal. In our test on a 1440×1080 ProRes clip it was about 3.5 times faster than the CPU version. Decoding and most other filters run on the CPU for now. See the [measurements](docs/acceleration-notes.md).
 
-**GPU VapourSynth is the next goal.** VapourSynth added GPU support to its core in [R80](https://github.com/vapoursynth/vapoursynth/releases/tag/R80), and R82 already builds in this repository. The beta stays on R79 because R80 dropped the older plugin interface that 33 of the 56 bundled plugins still use. Moving to R82 means updating those plugins first, and that work has not started yet. See the [upgrade notes](docs/vs-r82-upgrade-2026-11-12.md).
+**This release upgrades the bundled core to VapourSynth R82.** R80 dropped the older plugin interface that most of the previous bundle still used; that migration is now complete — every legacy plugin was ported, verified byte-for-byte against its predecessor, or replaced by a successor. The verified filter chains render identical pixels on the new core. GPU VapourSynth support (added in [R80](https://github.com/vapoursynth/vapoursynth/releases/tag/R80)) is the next step. See the [release notes](docs/release-notes-2.0.0-beta.3.md).
 
 ## Install
 
 You need an Apple Silicon Mac on macOS 26 or later, and DaVinci Resolve 21.
 
-1. **Download** [VapourSynth for Resolve for macOS](https://github.com/Hank-tha-Cowdog/VapourSynth4Resolve/releases/download/v2.0.0-beta.2/VapourSynth.Companion-2.0.0-beta.2-arm64.dmg). It is a `.dmg` file and lands in your Downloads folder.
+1. **Download** [VapourSynth for Resolve for macOS](https://github.com/Hank-tha-Cowdog/VapourSynth4Resolve/releases/download/v2.0.0-beta.3/VapourSynth.Companion-2.0.0-beta.3-arm64.dmg). It is a `.dmg` file and lands in your Downloads folder.
 2. **Open the `.dmg`** and drag VapourSynth Companion onto the Applications folder.
 3. **Open the app** from Applications. macOS asks you to confirm the first time; click **Open**.
 4. **Add the plugin to Resolve.** Quit Resolve first. In the app, click the status icon in the title bar, then click **Install for Resolve**. macOS may ask for your password.
@@ -160,7 +160,7 @@ A few things worth knowing:
 You need Xcode, Homebrew (for `zimg` and Python 3.12 or later), CMake 3.24 or later, and Node 24.
 
 ```sh
-scripts/build-vapoursynth.sh R79
+scripts/build-vapoursynth.sh R82
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DVSRES_VS_PREFIX="$PWD/vendor/vapoursynth/active"
 cmake --build build
 cd companion-app && npm ci && npm run build
@@ -176,7 +176,7 @@ This is a beta.
 - It has not been widely tested on other people's Macs yet, so expect rough edges.
 - Try it on test projects and copies of your media first.
 
-What changed and what is still open are in the release notes for [beta.2](docs/release-notes-2.0.0-beta.2.md) and [beta.1](docs/release-notes-2.0.0-beta.1.md). Found a bug? [Open an issue](https://github.com/Hank-tha-Cowdog/VapourSynth4Resolve/issues) with your macOS and Resolve versions and the steps to reproduce it. Please leave out private footage and API keys. To help with the code, see [contributing](CONTRIBUTING.md).
+What changed and what is still open are in the release notes for [beta.3](docs/release-notes-2.0.0-beta.3.md), [beta.2](docs/release-notes-2.0.0-beta.2.md) and [beta.1](docs/release-notes-2.0.0-beta.1.md). Found a bug? [Open an issue](https://github.com/Hank-tha-Cowdog/VapourSynth4Resolve/issues) with your macOS and Resolve versions and the steps to reproduce it. Please leave out private footage and API keys. To help with the code, see [contributing](CONTRIBUTING.md).
 
 ## License
 
