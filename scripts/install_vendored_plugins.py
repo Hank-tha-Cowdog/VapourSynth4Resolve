@@ -125,6 +125,18 @@ def main():
     "libfft3dfilter.dylib", "libsangnom.0.dylib",   # notice wording
     "libPSI.dylib", "libscxvid.dylib", "libvsnlm_ispc.dylib",  # drop-candidates
 }
+    # Data files plugins read from their own directory (no namespace to
+    # probe): znedi3 needs nnedi3_weights.bin beside it. Copied verbatim
+    # whenever present in the vendor drop.
+    for data in ("nnedi3_weights.bin",):
+        src_data = os.path.join(VENDOR_LIB, data)
+        if os.path.isfile(src_data) and not dry:
+            os.makedirs(USER_PLUGINS, exist_ok=True)
+            dst_data = os.path.join(USER_PLUGINS, data)
+            if not os.path.lexists(dst_data):
+                shutil.copy2(src_data, dst_data)
+                print(f"  + {data} (data file)")
+
     for name in sorted(os.listdir(VENDOR_LIB)):
         if not name.endswith(".dylib"):
             continue

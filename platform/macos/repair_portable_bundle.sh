@@ -65,17 +65,38 @@ done < "$PLUGIN_LIST"
 # Any other @rpath/*.dylib a plugin needs stays as-is; a follow-up sweep
 # prints anything unresolvable.
 
-# libmvtools genuinely links FFTW (Homebrew fftw — GPL-2+, compatible with
-# the project's GPLv3; see docs/SBOM.md). Ship it inside Libraries/ and
-# rewrite the reference bundle-internally.
-if grep -q '^libmvtools.dylib$' "$PLUGIN_LIST"; then
-    cp /opt/homebrew/opt/fftw/lib/libfftw3f.3.dylib "$LIBS/libfftw3f.3.dylib"
-    install_name_tool -id @loader_path/libfftw3f.3.dylib "$LIBS/libfftw3f.3.dylib"
-    install_name_tool -change \
-        /opt/homebrew/opt/fftw/lib/libfftw3f.3.dylib \
-        "@loader_path/../Libraries/libfftw3f.3.dylib" \
-        "$PLUGINS/libmvtools.dylib"
-    log "libmvtools fftw → bundle Libraries/"
+# FFTW users (Homebrew fftw — GPL-2+, compatible with the project's GPLv3;
+# see docs/SBOM.md): libmvtools, and the R82-rebuilt libdfttest/libbm3d/
+# libdctfilter which link FFTW directly. Ship the libs inside Libraries/ and
+# rewrite absolute Homebrew references bundle-internally. The vendored
+# @rpath/libfftw3f refs resolve against this same library (3.3.11's
+# compatibility version 11.0.0 satisfies their 10.0.0 requirement).
+FFTW_PEERS=""
+for peer in libmvtools.dylib libdfttest.dylib libbm3d.dylib libdctfilter.dylib; do
+    grep -q "^${peer}$" "$PLUGIN_LIST" && FFTW_PEERS="$FFTW_PEERS $peer"
+done
+if [ -n "$FFTW_PEERS" ]; then
+    for fftw in libfftw3f.3.dylib libfftw3f_threads.3.dylib; do
+        cp "/opt/homebrew/opt/fftw/lib/$fftw" "$LIBS/$fftw"
+        install_name_tool -id "@loader_path/$fftw" "$LIBS/$fftw"
+    done
+    for peer in $FFTW_PEERS; do
+        for fftw in libfftw3f.3.dylib libfftw3f_threads.3.dylib; do
+            install_name_tool -change \
+                "/opt/homebrew/opt/fftw/lib/$fftw" \
+                "@loader_path/../Libraries/$fftw" \
+                "$PLUGINS/$peer" 2>/dev/null || true
+        done
+    done
+    log "fftw → bundle Libraries/ (plugins:$FFTW_PEERS)"
+fi
+
+# ── 0b. znedi3 data file ────────────────────────────────────────────────────
+# znedi3 reads nnedi3_weights.bin from its own directory (a data file, so the
+# plugin-list loop above never carries it). Same fail-closed idea as fftw.
+if grep -q '^libznedi3.dylib$' "$PLUGIN_LIST" && [ -f "$VENDOR_LIBS/nnedi3_weights.bin" ]; then
+    cp -f "$VENDOR_LIBS/nnedi3_weights.bin" "$PLUGINS/nnedi3_weights.bin"
+    log "nnedi3_weights.bin → Plugins/ (znedi3 data file)"
 fi
 
 # ── 1b. Vendor support libs for the vs-mlrt plugin family ─────────────────
