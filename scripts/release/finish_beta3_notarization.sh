@@ -19,6 +19,22 @@ xcrun stapler staple "$DMG"
 xcrun stapler validate "$DMG"
 spctl -a -vvv "$APP"
 shasum -a 256 "$DMG"
-# Then swap the release asset (replace <tree> with the repo path):
-#   gh release upload v2.0.0-beta.3 "$DMG" --clobber
-# and refresh the digest note in docs/release-status.md.
+
+# Swap the release asset and remove the notarization caveat from the notes.
+gh release upload v2.0.0-beta.3 "$DMG" --clobber -R Hank-tha-Cowdog/VapourSynth4Resolve
+REPO_NOTES="$(cd .. && pwd)/docs/release-notes-2.0.0-beta.3.md"
+python3 - "$REPO_NOTES" <<'PY'
+import sys
+from pathlib import Path
+p = Path(sys.argv[1]); t = p.read_text()
+t = t.replace(
+    '''macOS 26.0+ \u00b7 Apple silicon (arm64) \u00b7 **Developer ID-signed DMG** (Apple\nnotarization for this build is pending \u2014 see Install).''',
+    '''macOS 26.0+ \u00b7 Apple silicon (arm64) \u00b7 signed + notarized + stapled DMG.''')
+t = t.replace(
+    '''2. **First launch:** because notarization for this build is still pending,\n   macOS will warn that it cannot verify the app. Right-click the app in\n   Applications \u2192 **Open** \u2192 **Open anyway**. (Terminal alternative:\n   `xattr -d com.apple.quarantine \"/Applications/VapourSynth Companion.app\"`.)\n   The app is Developer ID-signed; a notarized build replaces this DMG on\n   this page as soon as it is available.\n3. Run the setup flow inside the app''',
+    '''2. Launch it and run the setup flow inside the app''')
+p.write_text(t)
+print("notes de-caveated")
+PY
+gh release edit v2.0.0-beta.3 --notes-file "$REPO_NOTES" -R Hank-tha-Cowdog/VapourSynth4Resolve
+echo "ASSET + NOTES SWAPPED" 
