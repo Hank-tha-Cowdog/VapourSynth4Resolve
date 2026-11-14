@@ -147,3 +147,13 @@ Recommendation: the first R82 test build ships the 11-namespace verified set
 the port worklist (highest usage first: temporalsoften2 → dfttest/deblock/
 tcomb/smoothuv/rdvs/neo-f3kdb/lghost/wnnm); unused rewrite-tier plugins are
 cut candidates that return only with an upstream port or demonstrated need.
+
+## G. Flip (2026-11-14)
+
+`vendor/vapoursynth/active` → **install-R82**; vendor drop + `portable_plugins.txt`
+carry the R82 47-plugin curated set (56 → 47: -6 cuts, -3 deferrals, -knlmeanscl,
+-ttmpsm; +znedi3, +lsmashsource [now shippable], bm3dmetal refreshed). Staging
+runs through the controlled flow (`portable_bundle` CMake target →
+`repair_portable_bundle.sh` → fail-closed audit). LSMAS relinked against the
+project's own LGPL ffmpeg-9.0.2 kit (static; frame-identical, zero Homebrew
+refs). Recipe + pitfalls: `flip-record.md`.
