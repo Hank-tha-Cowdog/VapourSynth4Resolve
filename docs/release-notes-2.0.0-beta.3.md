@@ -5,8 +5,7 @@ chain editor, render queue, node records, window rule) — now running on the
 **newest VapourSynth core (R82 / API 4)** with a fully migrated,
 parity-verified plugin set.
 
-macOS 26.0+ · Apple silicon (arm64) · **Developer ID-signed DMG** (Apple
-notarization for this build is pending — see Install).
+macOS 26.0+ · Apple silicon (arm64) · signed + notarized + stapled DMG.
 
 ## What's new since beta.2
 
@@ -52,13 +51,7 @@ pipeline, and the companion UI.
 ## Install
 
 1. Open the DMG, drag **VapourSynth Companion** to Applications.
-2. **First launch:** because notarization for this build is still pending,
-   macOS will warn that it cannot verify the app. Right-click the app in
-   Applications → **Open** → **Open anyway**. (Terminal alternative:
-   `xattr -d com.apple.quarantine "/Applications/VapourSynth Companion.app"`.)
-   The app is Developer ID-signed; a notarized build replaces this DMG on
-   this page as soon as it is available.
-3. Run the setup flow inside the app (it installs/refreshes the OFX plugin
+2. Launch it and run the setup flow inside the app (it installs/refreshes the OFX plugin
    from the app's own payload).
 
 ## Notes
