@@ -4,7 +4,7 @@ const crypto = require('node:crypto');
 const { app, BrowserWindow, ipcMain, dialog, shell, Menu } = require('electron');
 const path = require('path');
 const os = require('os');
-const { spawn } = require('child_process');
+const { spawn, spawnSync } = require('child_process');
 const fs = require('fs');
 const llm = require('./llm');
 const keychain = require('./keychain');
@@ -19,6 +19,16 @@ const { capabilitySnapshot } = require('./neural-capability');
 const { registerRecipeHandlers } = require('./recipes');
 const { editorConfigurationSnapshot, registerEditorConfigurationBridge, isManualHostConfig, describeManualHostConfigProblem } = require('./editor-configuration');
 const nodeRecords = require('./node-records');
+const runtimeEnv = require('./py-runtime-env');
+
+// Keep the embedded Python from writing bytecode caches into its own signed
+// bundle (seal-breaking field bug 2026-11-17 — see py-runtime-env.js).
+// Children inherit process.env, so this one call covers every spawn site.
+try {
+  runtimeEnv.applyPythonNoCacheEnv(process.env, path.join(app.getPath('userData') || os.tmpdir(), 'pycache'));
+} catch {
+  runtimeEnv.applyPythonNoCacheEnv(process.env);
+}
 
 // --- RUNTIME ARCHITECTURE (M1 OPTIMIZED) ---
 // `isDev` controls Python runtime path lookups (inherited from vapoursage).
@@ -1039,6 +1049,23 @@ app.whenReady().then(() => {
       });
     } catch (err) {
       return { ok: false, error: String((err && err.message) || err) };
+    }
+    if (action === 'install' && RUNTIMES.ofxBundle.exists) {
+      // Self-repair for pre-guard installs: the embedded Python used to write
+      // bytecode caches into its own signed bundle, breaking the seal and
+      // failing this trust gate permanently. Remove ONLY the files codesign
+      // reports as unsealed `file added:` bytecode caches, then re-verify;
+      // proceed only if the bundle now verifies clean (fail-closed
+      // otherwise — see py-runtime-env.js).
+      const repaired = runtimeEnv.repairUnsealedBytecode(RUNTIMES.ofxBundle.path, {
+        runVerify: bundlePath => {
+          const r = spawnSync('/usr/bin/codesign', ['--verify', '--deep', '--strict', '--verbose=4', bundlePath], { encoding: 'utf8' });
+          return { ok: r.status === 0, output: `${r.stdout || ''}\n${r.stderr || ''}` };
+        },
+      });
+      if (repaired.action === 'removed') {
+        send('log', { type: 'info', message: `Removed ${repaired.removed.length} unsealed bytecode cache file(s) the embedded Python had written into the bundled plugin — re-verified: ${repaired.ok ? 'seal intact' : 'still failing, install will refuse'}.` });
+      }
     }
     return await runInstaller({ spawnImpl: spawn, helper, args });
   });

@@ -437,13 +437,20 @@ test('native composer preamble carries the guarded vsmlrt import (C08)', () => {
 // ── security review #3: MCP bearer-token auth ─────────────────────────────────────
 test('MCP server refuses requests without the per-launch token', async () => {
     const { startMcpServer } = require(path.join(__dirname, 'services', 'mcpServer.js'));
+    // The server binds VSRES_MCP_PORT || 8799. Use a collision-free port:
+    // a RUNNING companion instance legitimately holds the default one, and
+    // that must not turn this security check red.
     const port = 20000 + Math.floor(Math.random() * 20000);
+    const prevPort = process.env.VSRES_MCP_PORT;
+    process.env.VSRES_MCP_PORT = String(port);
     const mcp = await startMcpServer({
         toolDefinitions: [],
         execute: async () => ({ ok: true }),
         requestChainEdit: async () => ({ ok: true }),
     });
+    if (prevPort === undefined) delete process.env.VSRES_MCP_PORT; else process.env.VSRES_MCP_PORT = prevPort;
     assert.ok(mcp && mcp.token, 'server started and returned a token');
+    assert.equal(mcp.port, port, 'binds the requested port');
     const post = (headers) => new Promise((resolve) => {
         const req = http.request({ host: '127.0.0.1', port: mcp.port, path: '/mcp',
             method: 'POST', headers: { 'content-type': 'application/json', ...headers } },

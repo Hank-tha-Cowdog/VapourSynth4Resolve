@@ -6,6 +6,11 @@
 # need a real GUI session; exercised manually before releases).
 set -u
 cd "$(dirname "$0")/.."
+# Keep python invocations inside tests from writing __pycache__ into the
+# source tree: the fail-closed payload audit refuses to package those files
+# (caught 2026-11-17 — suite pollution failed the release build), and the
+# signed bundles must stay bytecode-free (see electron/py-runtime-env.js).
+export PYTHONDONTWRITEBYTECODE=1
 NODE_BIN="${NODE:-node}"
 # asdf shims resolve their installs via $HOME/.asdf and fail SILENTLY with
 # exit 126 when this script runs under an isolated HOME (test isolation) —
